@@ -1,15 +1,14 @@
-plugins {
-    alias(libs.plugins.android.application)
-    alias(libs.plugins.kotlin.android)
-    alias(libs.plugins.kotlin.compose)
-    alias(libs.plugins.ksp)
-}
+    plugins {
+        alias(libs.plugins.android.application)
+        alias(libs.plugins.kotlin.android)
+        alias(libs.plugins.kotlin.compose)
+        alias(libs.plugins.ksp)
+        alias(libs.plugins.hilt)
+    }
 
 android {
     namespace = "com.example.ballighandroidapp"
-    compileSdk {
-        version = release(36)
-    }
+    compileSdk = 36
 
     defaultConfig {
         applicationId = "com.example.ballighandroidapp"
@@ -50,6 +49,9 @@ dependencies {
     implementation("androidx.room:room-ktx:${room_version}")
     implementation("androidx.navigation:navigation-compose:$nav_version")
     implementation("androidx.compose.material:material-icons-extended")
+
+    implementation(libs.hilt.android)
+    ksp(libs.hilt.compiler)
 
     implementation("com.squareup.retrofit2:retrofit:2.9.0")
     implementation("com.squareup.retrofit2:converter-gson:2.9.0")
