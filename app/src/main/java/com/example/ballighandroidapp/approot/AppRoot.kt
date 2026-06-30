@@ -1,6 +1,8 @@
 package com.example.ballighandroidapp.approot
 
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
+import androidx.compose.ui.platform.LocalContext
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
@@ -9,6 +11,7 @@ import com.example.ballighandroidapp.features.auth.login.view.LoginScreen
 import com.example.ballighandroidapp.features.auth.register.view.RegisterScreen
 import com.example.ballighandroidapp.features.onboardingScreens.OnboardingScreen
 import com.example.ballighandroidapp.features.splashScreen.SplashScreen
+import com.example.ballighandroidapp.helpers.local.AppPreferences
 
 sealed class Screen(val route: String) {
     object Splash : Screen("splash")
@@ -22,6 +25,8 @@ sealed class Screen(val route: String) {
 @Composable
 fun AppRoot() {
     val navController = rememberNavController()
+    val context = LocalContext.current
+    val appPreferences = remember { AppPreferences(context) }
 
     NavHost(
         navController = navController,
@@ -30,8 +35,23 @@ fun AppRoot() {
         composable(Screen.Splash.route) {
             SplashScreen(
                 onNavigateToOnboarding = {
-                    navController.navigate(Screen.Onboarding.route) {
-                        popUpTo(Screen.Splash.route) { inclusive = true }
+                    // 3-State Routing Logic
+                    when {
+                        appPreferences.isFirstTimeLaunch -> {
+                            navController.navigate(Screen.Onboarding.route) {
+                                popUpTo(Screen.Splash.route) { inclusive = true }
+                            }
+                        }
+                        appPreferences.isUserLoggedIn -> {
+                            navController.navigate(Screen.Home.route) {
+                                popUpTo(Screen.Splash.route) { inclusive = true }
+                            }
+                        }
+                        else -> {
+                            navController.navigate(Screen.Login.route) {
+                                popUpTo(Screen.Splash.route) { inclusive = true }
+                            }
+                        }
                     }
                 }
             )
@@ -40,7 +60,8 @@ fun AppRoot() {
         composable(Screen.Onboarding.route) {
             OnboardingScreen(
                 onFinish = {
-                    // Navigation MUST go to RoleSelectionScreen after Onboarding
+                    // Mark onboarding as finished to prevent loop
+                    appPreferences.isFirstTimeLaunch = false
                     navController.navigate(Screen.RoleSelection.route) {
                         popUpTo(Screen.Onboarding.route) { inclusive = true }
                     }
@@ -51,8 +72,6 @@ fun AppRoot() {
         composable(Screen.RoleSelection.route) {
             RoleSelectionScreen(
                 onRoleSelected = { roleId ->
-                    // Logic to navigate to Login or Register based on choice
-                    // For now, navigating to Login as standard flow
                     navController.navigate(Screen.Login.route)
                 }
             )
@@ -68,9 +87,7 @@ fun AppRoot() {
                 onNavigateToRegister = {
                     navController.navigate(Screen.Register.route)
                 },
-                onForgotPassword = {
-                    // Handle Forgot Password navigation
-                }
+                onForgotPassword = {}
             )
         }
         
@@ -86,14 +103,14 @@ fun AppRoot() {
                 },
                 onNavigateToLogin = {
                     navController.navigate(Screen.Login.route) {
-                        popUpTo(Screen.Login.route) { inclusive = true }
+                        popUpTo(Screen.Register.route) { inclusive = true }
                     }
                 }
             )
         }
 
         composable(Screen.Home.route) {
-            // Placeholder for Home/CitizenHome Screen
+            // Citizen Dashboard Placeholder
         }
     }
 }

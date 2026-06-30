@@ -6,6 +6,7 @@ import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.ballighandroidapp.R
+import com.example.ballighandroidapp.helpers.local.AppPreferences
 import com.example.ballighandroidapp.helpers.local.data.repository.UserRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.launch
@@ -13,7 +14,8 @@ import javax.inject.Inject
 
 @HiltViewModel
 class LoginViewModel @Inject constructor(
-    private val userRepository: UserRepository
+    private val userRepository: UserRepository,
+    private val appPreferences: AppPreferences
 ) : ViewModel() {
 
     var nationalId by mutableStateOf("")
@@ -63,7 +65,13 @@ class LoginViewModel @Inject constructor(
                     val user = userRepository.loginWithNationalID(nationalId, password)
                     if (user != null) {
                         when (user.accountStatus) {
-                            1 -> onSuccess()
+                            1 -> {
+                                if (rememberMe) {
+                                    appPreferences.isUserLoggedIn = true
+                                    appPreferences.loggedInNationalId = nationalId
+                                }
+                                onSuccess()
+                            }
                             2 -> generalErrorResId = R.string.error_account_blocked
                             else -> generalErrorResId = R.string.error_invalid_credentials
                         }
@@ -87,7 +95,6 @@ class LoginViewModel @Inject constructor(
             isValid = false
         }
 
-        // Advanced Password Validation: Min 8 chars, Uppercase, Lowercase, Number
         val passwordPattern = "^(?=.*[0-9])(?=.*[a-z])(?=.*[A-Z]).{8,}$".toRegex()
 
         if (password.isBlank()) {
