@@ -1,0 +1,310 @@
+<resources>
+    <!-- App Basics -->
+    <string name="app_name">Balligh</string>
+    <string name="balligh_arabic">بلّغ</string>
+    <string name="balligh_english">Balligh</string>
+    <string name="balligh_official">Balligh Official</string>
+    <string name = "promo_one_photo">One photo is enough</string>
+    <!-- Navigation & UI Labels -->
+    <string name="nav_home">Home</string>
+    <string name="nav_notifications">Notifications</string>
+    <string name="nav_settings">Settings</string>
+    <string name="nav_map">Map</string>
+    <string name="nav_my_reports">My Reports</string>
+    <string name="nav_my_account">Account</string>
+    <string name="nav_analytics">Analytics</string>
+    <string name="nav_reports">Reports</string>
+    <string name="nav_dashboard">Dashboard</string>
+    <string name="nav_tasks">Tasks</string>
+
+    <!-- Actions -->
+    <string name="action_send">Send</string>
+    <string name="action_add">Add</string>
+    <string name="action_close">Close</string>
+    <string name="action_login">Login</string>
+    <string name="action_logout">Logout</string>
+    <string name="action_edit">Edit</string>
+    <string name="action_save">Save</string>
+    <string name="action_save_changes">Save Changes</string>
+    <string name="action_view">View</string>
+    <string name="action_view_all">View All</string>
+    <string name="action_view_details">View Details</string>
+    <string name="action_export">Export</string>
+    <string name="action_upload">Upload</string>
+    <string name="action_update">Update</string>
+    <string name="action_update_status">Update Status</string>
+    <string name="action_search">Search</string>
+    <string name="action_join">Join</string>
+    <string name="action_skip">Skip</string>
+    <string name="action_skip_alt">Skip</string>
+    <string name="action_next">Next</string>
+    <string name="action_take_photo">Take Photo</string>
+    <string name="action_start_now">Start Now</string>
+    <string name="action_assign_team">Assign to Team</string>
+    <string name="action_follow_up">Follow Up</string>
+    <string name="action_save_draft">Save as Draft</string>
+    <string name="action_add_note">Add Note</string>
+    <string name="action_continue">Continue</string>
+
+    <!-- Report-related Terms -->
+    <string name="report_singular">Report</string>
+    <string name="report_plural">Reports</string>
+    <string name="report_resolved">Resolved</string>
+    <string name="report_yours">Your Reports</string>
+    <string name="report_my_reports">My Reports</string>
+    <string name="report_your_report">Your Report</string>
+    <string name="report_reporting">Reporting</string>
+    <string name="report_reporting_action">Report your problem</string>
+    <string name="report_latest">Latest Reports</string>
+    <string name="report_add_new">Add Report</string>
+    <string name="report_send">Send Report</string>
+    <string name="report_follow_up">Follow Up Report</string>
+    <string name="report_details">Report Details</string>
+    <string name="report_status">Report Status</string>
+    <string name="report_category">Report Category</string>
+    <string name="report_description">Report Description</string>
+    <string name="report_drafting">Draft Report</string>
+
+    <!-- Status & Progress -->
+    <string name="status_in_progress">In Progress</string>
+    <string name="status_pending">Pending</string>
+    <string name="status_evaluating">Assessing the case</string>
+    <string name="status_evaluating_team">Under evaluation by the specialized team.</string>
+    <string name="status_completed">Completed</string>
+    <string name="status_done">Done</string>
+    <string name="status_solved">Solved</string>
+    <string name="status_delayed">Delayed</string>
+    <string name="status_waiting">On Hold</string>
+    <string name="status_under_review">In Review</string>
+    <string name="status_under_processing">Under Processing</string>
+    <string name="status_in_execution">In Execution</string>
+    <string name="status_assigned">Assigned</string>
+    <string name="status_submitted">Sent</string>
+    <string name="status_received">Report received</string>
+    <string name="status_closed">Closed</string>
+    <string name="status_closed_success">Report closed successfully.</string>
+    <string name="status_waiting_execution">Awaiting Completion</string>
+    <string name="status_waiting_team">Awaiting maintenance team assignment.</string>
+    <string name="status_new">New</string>
+    <string name="status_all">All</string>
+
+    <!-- Priorities & Severity -->
+    <string name="priority_high">High</string>
+    <string name="priority_medium">Medium</string>
+    <string name="priority_low">Low</string>
+    <string name="priority_urgent">Urgent</string>
+    <string name="priority_excellent">Excellent</string>
+    <string name="priority_critical">Dangerous</string>
+    <string name="priority_critical_alt">Critical</string>
+
+    <!-- Issue Types & Categories -->
+    <string name="issue_pothole">Pothole</string>
+    <string name="issue_pothole_dangerous">Dangerous pothole in the street</string>
+    <string name="issue_pothole_deep">Deep pothole in the main street</string>
+    <string name="issue_water_leak">Water Leak</string>
+    <string name="issue_water_leak_main">Main water leak</string>
+    <string name="issue_waste">Waste</string>
+    <string name="issue_waste_accumulation">Garbage accumulation</string>
+    <string name="issue_lighting">Street Lighting</string>
+    <string name="issue_lighting_outage">Lighting outage</string>
+    <string name="issue_lighting_broken">Streetlight about to fall</string>
+    <string name="issue_darkness">Darkness</string>
+    <string name="issue_roads">Roads</string>
+    <string name="issue_pavement_damage">Damage to public sidewalk</string>
+    <string name="issue_maintenance">Maintenance</string>
+    <string name="issue_safety">Safety</string>
+    <string name="issue_electrical">Electrical</string>
+    <string name="issue_electrical_outage">Power outage in a commercial complex</string>
+    <string name="issue_malfunction">Malfunction</string>
+    <string name="issue_traffic_light">Traffic light malfunction</string>
+    <string name="issue_traffic_danger">Traffic Hazard</string>
+    <string name="category_roads_infrastructure">Roads &amp; Infrastructure</string>
+
+    <!-- Locations -->
+    <string name="loc_cairo">Cairo</string>
+    <string name="loc_maadi">Maadi</string>
+    <string name="loc_nasr_city">Nasr City</string>
+    <string name="loc_dokki">Dokki</string>
+    <string name="loc_shobra">Shobra</string>
+    <string name="loc_haram">Haram</string>
+    <string name="loc_riyadh">Riyadh</string>
+    <string name="loc_al_midan">Al-Midan</string>
+    <string name="loc_maryland">Maryland</string>
+    <string name="loc_narjes">Al-Narjis</string>
+    <string name="loc_yasmin">Al-Yasmin</string>
+    <string name="loc_malqa">Al-Malqa</string>
+    <string name="loc_aqeeq">Al-Aqeeq</string>
+    <string name="loc_olaya">Al-Olayya</string>
+
+    <!-- People & Roles -->
+    <string name="role_employee">Employee</string>
+    <string name="role_employees">Employees</string>
+    <string name="role_citizen">Citizen</string>
+    <string name="role_citizens">Citizens</string>
+    <string name="role_team">Team</string>
+    <string name="role_field_team">Field Teams</string>
+    <string name="role_manager">Responsible</string>
+    <string name="role_system_manager">System Administrator</string>
+    <string name="role_inspector">Inspector</string>
+    <string name="role_neighborhood_inspector">Neighborhood Inspector</string>
+    <string name="role_verified_citizen">Verified Citizen</string>
+    <string name="role_technical_support">Technical Support</string>
+
+    <!-- User Information & Auth -->
+    <string name="auth_create_account">Create New Account</string>
+    <string name="auth_create_account_short">Sign Up</string>
+    <string name="auth_choose_account_type">Choose Account Type</string>
+    <string name="auth_no_account">Don\'t have an account?</string>
+    <string name="auth_have_account">Already have an account?</string>
+    <string name="auth_forgot_password">Forgot Password?</string>
+    <string name="auth_remember_me">Remember Me</string>
+    <string name="user_full_name">Full Name</string>
+    <string name="user_enter_full_name">Enter your full name</string>
+    <string name="user_national_id">National ID</string>
+    <string name="user_phone">Mobile Number</string>
+    <string name="user_phone_alt">Phone Number</string>
+    <string name="user_password">Password</string>
+    <string name="user_email">Email Address</string>
+    <string name="user_job_id">Job ID</string>
+    <string name="user_job_title">Job Title</string>
+    <string name="user_points">Your Points</string>
+    <string name="user_personal_info">Personal Information</string>
+    <string name="user_edit_profile">Edit Profile</string>
+    <string name="user_reporter_info">Reporter Information</string>
+
+    <!-- Onboarding & Promotional Texts -->
+    <string name="promo_transparency">Full transparency at every step</string>
+    <string name="promo_track_reports">Track the status of your reports and updates.</string>
+    <string name="promo_improve_city">How can we improve your city today?</string>
+    <string name="promo_select_role">Please select your role in Balligh platform to proceed and complete registration.</string>
+    <string name="promo_live_updates">Follow your report\'s status moment by moment, and receive live updates until the work is fully completed.</string>
+    <string name="promo_welcome">Welcome to Balligh</string>
+    <string name="promo_login_subtitle">Join your community, your voice is heard.</string>
+    <string name="promo_national_platform">National Platform for Reports</string>
+    <string name="promo_contribute">Contribute to improving your city through our smart services</string>
+    <string name="promo_report_issues">Report problems and violations in your area and track their resolution status transparently.</string>
+    <string name="promo_together_we_build">Together We Build Our City\'s Future</string>
+    <string name="promo_voice_heard">Your Voice Matters, your city is more beautiful</string>
+    <string name="promo_join_citizens">Join thousands of citizens contributing to making our city a better place to live and work.</string>
+    <string name="promo_quality_of_life">Contribute to improving the quality of life in your area by reporting any field challenges with one touch.</string>
+
+    <!-- Settings & App Options -->
+    <string name="settings_app_language">App Language</string>
+    <string name="settings_lang_arabic">العربية</string>
+    <string name="settings_lang_english">English</string>
+    <string name="settings_notifications">Notification Settings</string>
+    <string name="settings_notification_preferences">Notification Preferences</string>
+    <string name="settings_help_support">Help &amp; Support</string>
+    <string name="settings_privacy_policy">Privacy Policy</string>
+    <string name="settings_terms_of_use">Terms of Use</string>
+    <string name="settings_privacy_and_terms">Privacy Policy &amp; Terms</string>
+    <string name="settings_agree_to">I agree to</string>
+    <string name="settings_and"> and </string>
+    <string name="settings_support">Support</string>
+
+    <!-- KPIs & Analytics Labels -->
+    <string name="kpi_completion_rate">Completion Rate</string>
+    <string name="kpi_active_reports">Active Reports</string>
+    <string name="kpi_active_field_teams">Active Field Teams</string>
+    <string name="kpi_report_trends">Report Trends</string>
+    <string name="kpi_critical_districts">Critical Districts</string>
+    <string name="kpi_total_reports">Total Reports</string>
+    <string name="kpi_average_response">Average Response Time</string>
+    <string name="kpi_completed_tasks">Completed Tasks</string>
+    <string name="kpi_overall_rating">Overall Rating</string>
+    <string name="kpi_completed_reports">Completed Reports</string>
+    <string name="kpi_urgent_reports">Urgent Reports</string>
+    <string name="kpi_reports_by_category">Reports by Category</string>
+    <string name="kpi_districts_performance">Districts Performance</string>
+    <string name="kpi_heat_map">Violations Heat Map</string>
+    <string name="kpi_density_high">High Density</string>
+    <string name="kpi_density_medium">Medium Density</string>
+    <string name="kpi_density_low">Low Density</string>
+
+    <string name="label_overview_city">City Overview</string>
+    <string name="label_dashboard_analytics">Analytics Dashboard</string>
+    <string name="label_summary_services">Daily service performance and report management summary.</string>
+    <string name="label_overview_performance">Overview of reports and sectors performance.</string>
+    <string name="label_overview_status_today">Overview of today\'s reports status.</string>
+
+    <!-- Time & Dates -->
+    <string name="time_today">Today</string>
+    <string name="time_this_week">This Week</string>
+    <string name="time_this_month">This Month</string>
+    <string name="time_yesterday">Yesterday</string>
+    <string name="time_since_15_min">15 minutes ago</string>
+    <string name="time_since_45_min">45 minutes ago</string>
+    <string name="time_since_2_hours">2 hours ago</string>
+    <string name="time_since_1_day">1 day ago</string>
+    <string name="time_since_2_days">2 days ago</string>
+    <string name="time_since_1_week">1 week ago</string>
+
+    <!-- Days of the Week -->
+    <string name="day_saturday">Saturday</string>
+    <string name="day_sunday">Sunday</string>
+    <string name="day_monday">Monday</string>
+    <string name="day_tuesday">Tuesday</string>
+    <string name="day_wednesday">Wednesday</string>
+    <string name="day_thursday">Thursday</string>
+    <string name="day_friday">Friday</string>
+
+    <!-- Months -->
+    <string name="month_january">January</string>
+    <string name="month_february">February</string>
+    <string name="month_march">March</string>
+    <string name="month_april">April</string>
+    <string name="month_may">May</string>
+    <string name="month_june">June</string>
+    <string name="month_july">July</string>
+    <string name="month_august">August</string>
+    <string name="month_september">September</string>
+    <string name="month_october">October</string>
+    <string name="month_november">November</string>
+    <string name="month_december">December</string>
+
+    <!-- UI Prompts & Texts -->
+    <string name="prompt_take_or_upload">Click to take a photo or upload a file</string>
+    <string name="prompt_photo_location">Take a picture of the issue</string>
+    <string name="prompt_one_photo_enough">One photo is enough</string>
+    <string name="prompt_search_placeholder">Search by report number or address...</string>
+    <string name="prompt_location_auto">Automatically detected with high accuracy</string>
+    <string name="prompt_location_geographic">Geographic Location</string>
+    <string name="prompt_enter_id">Enter your ID</string>
+    <string name="prompt_enter_password">••••••••</string>
+
+    <!-- Errors -->
+    <string name="error_password_empty">Password cannot be empty</string>
+    <string name="error_password_length">At least 8 characters long.</string>
+    <string name="error_password_weak">Must include uppercase, lowercase, and a number.</string>
+    <string name="error_invalid_national_id">Invalid national ID number</string>
+    <string name="error_invalid_credentials">Invalid National ID or password</string>
+    <string name="error_account_blocked">Your account has been blocked. Please contact support.</string>
+    <string name="error_invalid_name">Name must not contain numbers</string>
+    <string name="error_name_empty">Name cannot be empty</string>
+
+    <!-- Misc Strings & Formats -->
+    <string name="format_welcome_user">Welcome, %1$s</string>
+    <string name="format_hello_user">Hello, %1$s</string>
+    <string name="format_report_number">Report No. #%1$s</string>
+    <string name="format_delayed_reports">%1$d delayed reports</string>
+    <string name="format_completion_percent">%1$d%% completion</string>
+
+
+    <!-- Common Numbers -->
+    <string name="num_0">0</string>
+    <string name="num_1">1</string>
+    <string name="num_2">2</string>
+    <string name="num_3">3</string>
+    <string name="num_4">4</string>
+    <string name="num_5">5</string>
+    <string name="num_6">6</string>
+    <string name="num_7">7</string>
+    <string name="num_8">8</string>
+    <string name="num_9">9</string>
+    <string name="num_10">10</string>
+
+    <string name="role_citizen_desc">Report issues and violations in your area and track the resolution status transparently.</string>
+    <string name="role_employee_desc">Receive reports assigned to your sector, update status, and communicate directly.</string>
+    <string name="role_system_manager_desc">Full management of users, permissions, and comprehensive statistical report reviews.</string>
+
+</resources>
