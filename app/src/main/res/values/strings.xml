@@ -330,4 +330,5 @@
     <string name="error_session_expired">Session expired. Please login again.</string>
     <string name="notifications_empty_title">Notifications box is empty</string>
     <string name="notifications_empty_description">Updates about your reports will appear here once sent by the administration.</string>
+
 </resources>

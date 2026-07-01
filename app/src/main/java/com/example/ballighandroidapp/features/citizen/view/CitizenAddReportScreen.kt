@@ -17,6 +17,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.CameraAlt
 import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.DeleteOutline
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.List
 import androidx.compose.material.icons.filled.LocationOn
@@ -50,16 +51,30 @@ import com.example.ballighandroidapp.ui.theme.Primary
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun CitizenAddReportScreen(
+    reportId: Int? = null, // null or -1 => CREATE MODE; valid id => EDIT/VIEW MODE
     onBackClick: () -> Unit,
     onReportSent: () -> Unit,
+    onReportDeleted: () -> Unit = onBackClick,
     viewModel: CitizenAddReportViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val context = LocalContext.current
 
-    // Navigate away on success
+    // Load existing report once, if we're opened in edit mode
+    LaunchedEffect(reportId) {
+        if (reportId != null && reportId != -1) {
+            viewModel.loadReportForEditing(reportId)
+        }
+    }
+
+    // Navigate away on create/update success
     LaunchedEffect(uiState.submitSuccess) {
         if (uiState.submitSuccess) onReportSent()
+    }
+
+    // Navigate away on delete success
+    LaunchedEffect(uiState.deleteSuccess) {
+        if (uiState.deleteSuccess) onReportDeleted()
     }
 
     // ── Photo source: gallery ──────────────────────────────────────────────
@@ -127,11 +142,14 @@ fun CitizenAddReportScreen(
     var showPhotoSourceSheet by remember { mutableStateOf(false) }
     val sheetState = rememberModalBottomSheetState()
 
+    // ── Delete confirmation dialog ───────────────────────────────────────
+    var showDeleteConfirmation by remember { mutableStateOf(false) }
+
     // Error snackbar
     val snackbarHostState = remember { SnackbarHostState() }
     LaunchedEffect(uiState.errorMessageResId) {
         uiState.errorMessageResId?.let {
-            snackbarHostState.showSnackbar(context.getString(it))
+            snackbarHostState.showSnackbar(message = context.getString(it))
             viewModel.onErrorDismissed()
         }
     }
@@ -143,7 +161,7 @@ fun CitizenAddReportScreen(
             TopAppBar(
                 title = {
                     Text(
-                        text = stringResource(R.string.report_add_new),
+                        text = if (uiState.isEditMode) "Report Details" else stringResource(R.string.report_add_new),
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.Bold,
                         color = Color(0xFF1E293B)
@@ -164,6 +182,19 @@ fun CitizenAddReportScreen(
             )
         }
     ) { innerPadding ->
+
+        if (uiState.isLoadingReport) {
+            Box(
+                modifier = Modifier
+                    .padding(innerPadding)
+                    .fillMaxSize(),
+                contentAlignment = Alignment.Center
+            ) {
+                CircularProgressIndicator(color = Primary)
+            }
+            return@Scaffold
+        }
+
         Column(
             modifier = Modifier
                 .padding(innerPadding)
@@ -172,6 +203,11 @@ fun CitizenAddReportScreen(
                 .padding(horizontal = 16.dp, vertical = 8.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
+
+            // ── Status badge (edit mode only) ────────────────────────────
+            if (uiState.isEditMode) {
+                ReportStatusBadge(status = uiState.reportStatus)
+            }
 
             // ── Photo capture card ──────────────────────────────────────────
             SectionLabel(text = stringResource(R.string.prompt_photo_location))
@@ -188,8 +224,6 @@ fun CitizenAddReportScreen(
 
             LocationCard(
                 location = uiState.location,
-                isEditing = uiState.isLocationEditing,
-                onEditToggle = { viewModel.onLocationEditToggle() },
                 onLocationChanged = { viewModel.onLocationChanged(it) }
             )
 
@@ -223,29 +257,93 @@ fun CitizenAddReportScreen(
 
             Spacer(modifier = Modifier.height(8.dp))
 
-            // ── Send button ─────────────────────────────────────────────────
-            Button(
-                onClick = { viewModel.sendReport() },
-                enabled = !uiState.isSubmitting && !uiState.isGeneratingDraft,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(52.dp),
-                shape = RoundedCornerShape(14.dp),
-                colors = ButtonDefaults.buttonColors(containerColor = Primary)
-            ) {
-                if (uiState.isSubmitting) {
-                    CircularProgressIndicator(
-                        color = Color.White,
-                        modifier = Modifier.size(20.dp),
-                        strokeWidth = 2.dp
-                    )
-                } else {
-                    Text(
-                        text = "▶  ${stringResource(R.string.report_send)}",
-                        fontWeight = FontWeight.Bold,
-                        fontSize = 15.sp,
-                        color = Color.White
-                    )
+            if (uiState.isEditMode) {
+                // ── EDIT MODE: Save Changes + Delete Report ─────────────────
+
+                OutlinedButton(
+                    onClick = { viewModel.updateReport() },
+                    enabled = !uiState.isSubmitting && !uiState.isDeleting,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(52.dp),
+                    shape = RoundedCornerShape(14.dp),
+                    border = ButtonDefaults.outlinedButtonBorder.copy(
+                        brush = androidx.compose.ui.graphics.SolidColor(Primary)
+                    ),
+                    colors = ButtonDefaults.outlinedButtonColors(contentColor = Primary)
+                ) {
+                    if (uiState.isSubmitting) {
+                        CircularProgressIndicator(
+                            color = Primary,
+                            modifier = Modifier.size(20.dp),
+                            strokeWidth = 2.dp
+                        )
+                    } else {
+                        Text(
+                            text = "Save Changes",
+                            fontWeight = FontWeight.SemiBold,
+                            fontSize = 15.sp
+                        )
+                    }
+                }
+
+                Button(
+                    onClick = { showDeleteConfirmation = true },
+                    enabled = !uiState.isSubmitting && !uiState.isDeleting,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(52.dp),
+                    shape = RoundedCornerShape(14.dp),
+                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFDC2626))
+                ) {
+                    if (uiState.isDeleting) {
+                        CircularProgressIndicator(
+                            color = Color.White,
+                            modifier = Modifier.size(20.dp),
+                            strokeWidth = 2.dp
+                        )
+                    } else {
+                        Icon(
+                            imageVector = Icons.Default.DeleteOutline,
+                            contentDescription = null,
+                            tint = Color.White,
+                            modifier = Modifier.size(20.dp)
+                        )
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text(
+                            text = "Delete Report",
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 15.sp,
+                            color = Color.White
+                        )
+                    }
+                }
+            } else {
+                // ── CREATE MODE: Send Report ─────────────────────────────────
+
+                Button(
+                    onClick = { viewModel.sendReport() },
+                    enabled = !uiState.isSubmitting && !uiState.isGeneratingDraft,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(52.dp),
+                    shape = RoundedCornerShape(14.dp),
+                    colors = ButtonDefaults.buttonColors(containerColor = Primary)
+                ) {
+                    if (uiState.isSubmitting) {
+                        CircularProgressIndicator(
+                            color = Color.White,
+                            modifier = Modifier.size(20.dp),
+                            strokeWidth = 2.dp
+                        )
+                    } else {
+                        Text(
+                            text = "▶  ${stringResource(R.string.report_send)}",
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 15.sp,
+                            color = Color.White
+                        )
+                    }
                 }
             }
 
@@ -295,9 +393,78 @@ fun CitizenAddReportScreen(
             }
         }
     }
+
+    // ── Delete confirmation dialog ───────────────────────────────────────
+    if (showDeleteConfirmation) {
+        AlertDialog(
+            onDismissRequest = { showDeleteConfirmation = false },
+            title = { Text("Delete Report?", fontWeight = FontWeight.Bold) },
+            text = { Text("This action cannot be undone. Are you sure you want to delete this report?") },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        showDeleteConfirmation = false
+                        viewModel.deleteReport()
+                    }
+                ) {
+                    Text("Delete", color = Color(0xFFDC2626), fontWeight = FontWeight.Bold)
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showDeleteConfirmation = false }) {
+                    Text("Cancel", color = Color(0xFF64748B))
+                }
+            }
+        )
+    }
 }
 
 // ─── Sub-components ───────────────────────────────────────────────────────────
+
+@Composable
+private fun ReportStatusBadge(status: Int) {
+    val (label, textColor, bgColor) = when (status) {
+        1 -> Triple(R.string.status_under_review, Color(0xFFB45309), Color(0xFFFFFBEB))
+        2 -> Triple(R.string.status_waiting, Color(0xFF1D4ED8), Color(0xFFEFF6FF))
+        3 -> Triple(R.string.status_completed, Color(0xFF047857), Color(0xFFF0FDF4))
+        4 -> Triple(R.string.status_closed, Color(0xFFB91C1C), Color(0xFFFEF2F2))
+        else -> Triple(R.string.status_pending, Color.Gray, Color.LightGray.copy(alpha = 0.2f))
+    }
+
+    Surface(
+        modifier = Modifier.fillMaxWidth(),
+        color = bgColor,
+        shape = RoundedCornerShape(14.dp)
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp, vertical = 12.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Box(
+                modifier = Modifier
+                    .size(8.dp)
+                    .clip(CircleShape)
+                    .background(textColor)
+            )
+            Spacer(modifier = Modifier.width(10.dp))
+            Text(
+                text = stringResource(R.string.report_status),
+                color = textColor.copy(alpha = 0.75f),
+                fontSize = 12.sp,
+                fontWeight = FontWeight.Medium
+            )
+            Spacer(modifier = Modifier.weight(1f))
+            Text(
+                text = stringResource(id = label),
+                color = textColor,
+                fontSize = 14.sp,
+                fontWeight = FontWeight.ExtraBold
+            )
+        }
+    }
+}
 
 @Composable
 private fun SectionLabel(text: String, isAiBadge: Boolean = false) {
@@ -408,7 +575,6 @@ private fun ProblemTypeCard(
         }
     }
 }
-
 
 @Composable
 private fun PhotoSourceOption(
@@ -542,8 +708,6 @@ private fun PhotoCaptureCard(
 @Composable
 private fun LocationCard(
     location: String,
-    isEditing: Boolean,
-    onEditToggle: () -> Unit,
     onLocationChanged: (String) -> Unit
 ) {
     Surface(
@@ -557,62 +721,36 @@ private fun LocationCard(
                 .fillMaxWidth()
                 .padding(horizontal = 16.dp, vertical = 14.dp),
             verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.SpaceBetween
+            horizontalArrangement = Arrangement.spacedBy(10.dp)
         ) {
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(10.dp),
-                modifier = Modifier.weight(1f)
-            ) {
-                Icon(
-                    imageVector = Icons.Default.LocationOn,
-                    contentDescription = null,
-                    tint = Primary,
-                    modifier = Modifier.size(22.dp)
+            Icon(
+                imageVector = Icons.Default.LocationOn,
+                contentDescription = null,
+                tint = Primary,
+                modifier = Modifier.size(22.dp)
+            )
+            OutlinedTextField(
+                value = location,
+                onValueChange = onLocationChanged,
+                singleLine = true,
+                textStyle = MaterialTheme.typography.bodyMedium.copy(
+                    color = Color(0xFF1E293B),
+                    fontWeight = FontWeight.SemiBold
+                ),
+                placeholder = {
+                    Text(
+                        text = stringResource(R.string.prompt_location_geographic),
+                        color = Color(0xFFCBD5E1)
+                    )
+                },
+                modifier = Modifier.fillMaxWidth(),
+                colors = OutlinedTextFieldDefaults.colors(
+                    focusedBorderColor = Primary,
+                    unfocusedBorderColor = Color.Transparent,
+                    focusedContainerColor = Color.Transparent,
+                    unfocusedContainerColor = Color.Transparent
                 )
-                Column {
-                    if (isEditing) {
-                        OutlinedTextField(
-                            value = location,
-                            onValueChange = onLocationChanged,
-                            singleLine = true,
-                            textStyle = MaterialTheme.typography.bodyMedium.copy(
-                                color = Color(0xFF1E293B),
-                                fontWeight = FontWeight.SemiBold
-                            ),
-                            modifier = Modifier.fillMaxWidth(0.85f),
-                            colors = OutlinedTextFieldDefaults.colors(
-                                focusedBorderColor = Primary,
-                                unfocusedBorderColor = Color(0xFFCBD5E1)
-                            )
-                        )
-                    } else {
-                        Text(
-                            text = location,
-                            style = MaterialTheme.typography.bodyMedium,
-                            fontWeight = FontWeight.SemiBold,
-                            color = Color(0xFF1E293B),
-                            maxLines = 1,
-                            overflow = TextOverflow.Ellipsis
-                        )
-                        Text(
-                            text = stringResource(R.string.prompt_location_auto),
-                            style = MaterialTheme.typography.labelSmall,
-                            color = Color(0xFF64748B)
-                        )
-                    }
-                }
-            }
-
-            TextButton(onClick = onEditToggle) {
-                Text(
-                    text = if (isEditing) stringResource(R.string.action_save)
-                    else stringResource(R.string.action_edit),
-                    color = Primary,
-                    fontWeight = FontWeight.SemiBold,
-                    fontSize = 13.sp
-                )
-            }
+            )
         }
     }
 }

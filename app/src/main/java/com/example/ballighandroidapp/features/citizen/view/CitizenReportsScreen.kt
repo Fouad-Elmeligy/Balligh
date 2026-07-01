@@ -24,7 +24,8 @@ import com.example.ballighandroidapp.ui.theme.Primary
 
 @Composable
 fun CitizenReportsScreen(
-    viewModel: CitizenMainViewModel
+    viewModel: CitizenMainViewModel,
+    onReportClick: (Int) -> Unit
 ) {
     val state by viewModel.reportsState.collectAsState()
 
@@ -96,7 +97,10 @@ fun CitizenReportsScreen(
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
             items(state.reports) { report ->
-                CitizenReportCard(report = report)
+                CitizenReportCard(
+                    report = report,
+                    onClick = onReportClick
+                )
             }
         }
     }

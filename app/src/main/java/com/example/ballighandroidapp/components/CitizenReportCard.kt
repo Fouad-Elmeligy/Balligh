@@ -1,6 +1,7 @@
 package com.example.ballighandroidapp.components
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -12,6 +13,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -19,14 +21,15 @@ import coil.compose.AsyncImage
 import com.example.ballighandroidapp.R
 import com.example.ballighandroidapp.helpers.local.data.entities.ReportEntity
 
-/**
- * A reusable card component for displaying citizen reports.
- * Used in both HomeScreen and ReportsScreen.
- */
 @Composable
-fun CitizenReportCard(report: ReportEntity) {
+fun CitizenReportCard(
+    report: ReportEntity,
+    onClick: (Int) -> Unit = {}
+) {
     Card(
-        modifier = Modifier.fillMaxWidth(),
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable { onClick(report.reportID) },
         shape = RoundedCornerShape(24.dp),
         colors = CardDefaults.cardColors(containerColor = Color.White),
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
@@ -35,8 +38,6 @@ fun CitizenReportCard(report: ReportEntity) {
             modifier = Modifier.padding(16.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            // Image Rendering with Coil or Fallback Placeholder
-            // Using photoUrl from ReportEntity
             if (!report.photoUrl.isNullOrEmpty()) {
                 AsyncImage(
                     model = report.photoUrl,
@@ -98,16 +99,14 @@ fun CitizenReportCard(report: ReportEntity) {
     }
 }
 
-/**
- * Renders the status badge based on the report status integer.
- */
 @Composable
 fun StatusBadge(status: Int) {
-    val (text, color, bgColor) = when (status) {
-        1 -> Triple("Under Review", Color(0xFFB45309), Color(0xFFFFFBEB))
-        2 -> Triple("Waiting", Color(0xFF1D4ED8), Color(0xFFEFF6FF))
-        3 -> Triple("Solved", Color(0xFF047857), Color(0xFFF0FDF4))
-        else -> Triple("Pending", Color.Gray, Color.LightGray.copy(alpha = 0.2f))
+    val (labelRes, textColor, bgColor) = when (status) {
+        1 -> Triple(R.string.status_under_review, Color(0xFFB45309), Color(0xFFFFFBEB))
+        2 -> Triple(R.string.status_waiting, Color(0xFF1D4ED8), Color(0xFFEFF6FF))
+        3 -> Triple(R.string.status_completed, Color(0xFF047857), Color(0xFFF0FDF4))
+        4 -> Triple(R.string.status_closed, Color(0xFFB91C1C), Color(0xFFFEF2F2))
+        else -> Triple(R.string.status_pending, Color.Gray, Color.LightGray.copy(alpha = 0.2f))
     }
 
     Surface(
@@ -122,12 +121,12 @@ fun StatusBadge(status: Int) {
                 modifier = Modifier
                     .size(6.dp)
                     .clip(CircleShape)
-                    .background(color)
+                    .background(textColor)
             )
             Spacer(modifier = Modifier.width(6.dp))
             Text(
-                text = text,
-                color = color,
+                text = stringResource(id = labelRes),
+                color = textColor,
                 fontSize = 11.sp,
                 fontWeight = FontWeight.ExtraBold
             )

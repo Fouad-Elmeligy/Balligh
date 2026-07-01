@@ -1,6 +1,7 @@
 package com.example.ballighandroidapp.features.citizen.viewmodel
 
 import android.net.Uri
+import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.ballighandroidapp.R
@@ -14,21 +15,39 @@ import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 /**
- * UI State for the Add Report screen.
- * Encapsulates all form data and submission status.
+ * UI State for the Add/Edit/View Report screen.
+ * Supports two modes:
+ *  - CREATE: reportId == null, isEditMode == false, blank form.
+ *  - EDIT/VIEW: reportId != null, isEditMode == true, pre-filled from Room.
  */
 data class CitizenAddReportUiState(
+    // ── Mode ─────────────────────────────────────────────────────────────
+    val reportId: Int? = null,
+    val isEditMode: Boolean = false,
+    val isLoadingReport: Boolean = false,
+
+    // ── Original entity kept for updates/deletes ─────────────────────────
+    val originalReport: ReportEntity? = null,
+
+    // ── Form fields ──────────────────────────────────────────────────────
     val attachedPhotoPath: String? = null,
     val title: String = "",
-    val district: String = "Nasr City", // Default district
+    val district: String = "Nasr City",
     val location: String = "",
     val problemType: String = "General",
     val draftContent: String = "",
     val currentUserId: Int? = null,
+
+    // ── Status (view-only in edit mode) ──────────────────────────────────
+    val reportStatus: Int = 1,
+
+    // ── UI state / flags ─────────────────────────────────────────────────
     val isLocationEditing: Boolean = true,
     val isGeneratingDraft: Boolean = false,
     val isSubmitting: Boolean = false,
+    val isDeleting: Boolean = false,
     val submitSuccess: Boolean = false,
+    val deleteSuccess: Boolean = false,
     val errorMessageResId: Int? = null
 )
 
@@ -36,7 +55,8 @@ data class CitizenAddReportUiState(
 class CitizenAddReportViewModel @Inject constructor(
     private val reportRepository: ReportRepository,
     private val userRepository: UserRepository,
-    private val appPreferences: AppPreferences
+    private val appPreferences: AppPreferences,
+    savedStateHandle: SavedStateHandle
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(CitizenAddReportUiState())
@@ -44,6 +64,12 @@ class CitizenAddReportViewModel @Inject constructor(
 
     init {
         fetchCurrentUserSession()
+        
+        // ─── 1. Extract reportId from SavedStateHandle ───
+        val reportId: Int = savedStateHandle["reportId"] ?: -1
+        if (reportId != -1) {
+            loadReportForEditing(reportId)
+        }
     }
 
     private fun fetchCurrentUserSession() {
@@ -55,7 +81,41 @@ class CitizenAddReportViewModel @Inject constructor(
         }
     }
 
-    // --- Form Update Methods ---
+    // ─── 2. EDIT MODE: load existing report ───────────────────────────────────
+
+    fun loadReportForEditing(id: Int) {
+        _uiState.update { it.copy(isLoadingReport = true) }
+        viewModelScope.launch {
+            val report = reportRepository.getReportById(id)
+            if (report != null) {
+                _uiState.update {
+                    it.copy(
+                        isLoadingReport = false,
+                        isEditMode = true,
+                        reportId = report.reportID,
+                        originalReport = report,
+                        attachedPhotoPath = report.photoUrl,
+                        title = report.title,
+                        district = report.district,
+                        location = report.location ?: "",
+                        problemType = report.problemType,
+                        draftContent = report.content,
+                        reportStatus = report.status,
+                        isLocationEditing = false
+                    )
+                }
+            } else {
+                _uiState.update {
+                    it.copy(
+                        isLoadingReport = false,
+                        errorMessageResId = R.string.error_something_went_wrong
+                    )
+                }
+            }
+        }
+    }
+
+    // ─── Form Update Methods ────────────────────────────────────────────────
 
     fun onPhotoSelected(path: String) {
         _uiState.update { it.copy(attachedPhotoPath = path) }
@@ -77,16 +137,10 @@ class CitizenAddReportViewModel @Inject constructor(
         _uiState.update { it.copy(location = newLocation) }
     }
 
-    /**
-     * Toggles the location field between read-only and editable mode.
-     */
     fun onLocationEditToggle() {
         _uiState.update { it.copy(isLocationEditing = !it.isLocationEditing) }
     }
 
-    /**
-     * Updates the type of problem being reported (e.g., Lighting, Road Damage).
-     */
     fun onProblemTypeChanged(newType: String) {
         _uiState.update { it.copy(problemType = newType) }
     }
@@ -98,6 +152,8 @@ class CitizenAddReportViewModel @Inject constructor(
     fun onErrorDismissed() {
         _uiState.update { it.copy(errorMessageResId = null) }
     }
+
+    // ─── Validation ──────────────────────────────────────────────────────
 
     private fun validate(): Boolean {
         val state = _uiState.value
@@ -122,7 +178,18 @@ class CitizenAddReportViewModel @Inject constructor(
         }
     }
 
+    // ─── Save Logic (Insert or Update) ────────────────────────────────────
+
     fun sendReport() {
+        val state = _uiState.value
+        if (state.isEditMode) {
+            updateReport()
+        } else {
+            insertNewReport()
+        }
+    }
+
+    private fun insertNewReport() {
         if (!validate()) return
 
         val state = _uiState.value
@@ -134,14 +201,13 @@ class CitizenAddReportViewModel @Inject constructor(
                     userID = state.currentUserId!!,
                     photoUrl = state.attachedPhotoPath!!,
                     problemType = state.problemType,
-                    severity = 2, // Default Medium
+                    severity = 2,
                     title = state.title.trim(),
                     content = state.draftContent.trim(),
-                    status = 1, // 1: UnderReview
+                    status = 1,
                     district = state.district,
                     location = state.location.ifBlank { state.district }
                 )
-
                 reportRepository.insertReport(newReport)
                 _uiState.update { it.copy(isSubmitting = false, submitSuccess = true) }
             } catch (e: Exception) {
@@ -155,12 +221,58 @@ class CitizenAddReportViewModel @Inject constructor(
         }
     }
 
+    fun updateReport() {
+        val state = _uiState.value
+        val original = state.originalReport ?: return
+        if (!validate()) return
+
+        _uiState.update { it.copy(isSubmitting = true) }
+        viewModelScope.launch {
+            try {
+                val updated = original.copy(
+                    photoUrl = state.attachedPhotoPath!!,
+                    problemType = state.problemType,
+                    title = state.title.trim(),
+                    content = state.draftContent.trim(),
+                    district = state.district,
+                    location = state.location.ifBlank { state.district }
+                )
+                reportRepository.updateReport(updated)
+                _uiState.update { it.copy(isSubmitting = false, submitSuccess = true) }
+            } catch (e: Exception) {
+                _uiState.update {
+                    it.copy(
+                        isSubmitting = false,
+                        errorMessageResId = R.string.error_something_went_wrong
+                    )
+                }
+            }
+        }
+    }
+
+    fun deleteReport() {
+        val original = _uiState.value.originalReport ?: return
+        _uiState.update { it.copy(isDeleting = true) }
+        viewModelScope.launch {
+            try {
+                reportRepository.deleteReport(original)
+                _uiState.update { it.copy(isDeleting = false, deleteSuccess = true) }
+            } catch (e: Exception) {
+                _uiState.update {
+                    it.copy(
+                        isDeleting = false,
+                        errorMessageResId = R.string.error_something_went_wrong
+                    )
+                }
+            }
+        }
+    }
+
     fun saveAsDraft() {
         if (_uiState.value.attachedPhotoPath == null) {
             _uiState.update { it.copy(errorMessageResId = R.string.error_photo_required) }
             return
         }
-
         viewModelScope.launch {
             val state = _uiState.value
             val draft = ReportEntity(
@@ -170,7 +282,7 @@ class CitizenAddReportViewModel @Inject constructor(
                 severity = 1,
                 title = state.title.ifBlank { "Draft Report" },
                 content = state.draftContent,
-                status = 2, // 2: Waiting/Draft
+                status = 2,
                 district = state.district,
                 location = state.location
             )

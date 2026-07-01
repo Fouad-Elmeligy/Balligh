@@ -31,6 +31,7 @@ import androidx.compose.foundation.BorderStroke
 fun CitizenHomeScreen(
     viewModel: CitizenMainViewModel,
     onReportClick: () -> Unit,
+    onReportItemClick: (Int) -> Unit,
     onViewAllReports: () -> Unit
 ) {
     val state by viewModel.homeState.collectAsState()
@@ -157,7 +158,10 @@ fun CitizenHomeScreen(
         Spacer(modifier = Modifier.height(16.dp))
 
         state.latestReports.forEach { report ->
-            CitizenReportCard(report = report)
+            CitizenReportCard(
+                report = report,
+                onClick = onReportItemClick
+            )
             Spacer(modifier = Modifier.height(16.dp))
         }
     }

@@ -28,10 +28,12 @@ import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavDestination.Companion.hierarchy
 import androidx.navigation.NavGraph.Companion.findStartDestination
+import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
+import androidx.navigation.navArgument
 import com.example.ballighandroidapp.R
 import com.example.ballighandroidapp.features.auth.RoleSelectionScreen
 import com.example.ballighandroidapp.features.auth.login.view.LoginScreen
@@ -43,10 +45,10 @@ import com.example.ballighandroidapp.features.citizen.view.CitizenReportsScreen
 import com.example.ballighandroidapp.features.citizen.view.CitizenAccountScreen
 import com.example.ballighandroidapp.features.citizen.view.CitizenEditProfileScreen
 import com.example.ballighandroidapp.features.citizen.view.CitizenAddReportScreen
-import com.example.ballighandroidapp.features.citizen.view.CitizenNotificationScreen // 👈 استيراد الشاشة الجديدة
+import com.example.ballighandroidapp.features.citizen.view.CitizenNotificationScreen
 import com.example.ballighandroidapp.features.citizen.viewmodel.CitizenMainViewModel
 import com.example.ballighandroidapp.features.citizen.viewmodel.CitizenAccountViewModel
-import com.example.ballighandroidapp.features.citizen.viewmodel.NotificationViewModel // 👈 استيراد الـ ViewModel الجديد
+import com.example.ballighandroidapp.features.citizen.viewmodel.NotificationViewModel
 import com.example.ballighandroidapp.helpers.local.AppPreferences
 import com.example.ballighandroidapp.ui.theme.Primary
 
@@ -58,7 +60,9 @@ sealed class Screen(val route: String) {
     object Register : Screen("register")
     object Dashboard : Screen("dashboard")
     object EditProfile : Screen("edit_profile")
-    object AddReport : Screen("add_report")
+    object AddReport : Screen("add_report?reportId={reportId}") {
+        fun createRoute(reportId: Int? = null) = "add_report?reportId=${reportId ?: -1}"
+    }
     object Notifications : Screen("notifications")
 }
 
@@ -73,6 +77,7 @@ fun AppRoot() {
     val navController = rememberNavController()
     val context = LocalContext.current
     val appPreferences = remember { AppPreferences(context) }
+    val accountViewModel: CitizenAccountViewModel = hiltViewModel()
 
     NavHost(
         navController = navController,
@@ -156,8 +161,6 @@ fun AppRoot() {
         }
 
         composable(Screen.Dashboard.route) {
-            val accountViewModel: CitizenAccountViewModel = hiltViewModel()
-
             LaunchedEffect(Unit) {
                 accountViewModel.prepareEdit()
             }
@@ -165,8 +168,10 @@ fun AppRoot() {
             CitizenDashboard(
                 accountViewModel = accountViewModel,
                 onEditProfile = { navController.navigate(Screen.EditProfile.route) },
-                onAddReport = { navController.navigate(Screen.AddReport.route) },
-                onNotificationsClick = { navController.navigate(Screen.Notifications.route) }, // 👈 ربط كليك الجرس
+                onAddReport = { reportId ->
+                    navController.navigate(Screen.AddReport.createRoute(reportId))
+                },
+                onNotificationsClick = { navController.navigate(Screen.Notifications.route) },
                 onLogout = {
                     appPreferences.logout()
                     navController.navigate(Screen.Login.route) {
@@ -186,7 +191,15 @@ fun AppRoot() {
             )
         }
 
-        composable(Screen.AddReport.route) {
+        composable(
+            route = Screen.AddReport.route,
+            arguments = listOf(
+                navArgument("reportId") {
+                    type = NavType.IntType
+                    defaultValue = -1
+                }
+            )
+        ) {
             CitizenAddReportScreen(
                 onBackClick = { navController.popBackStack() },
                 onReportSent = { navController.popBackStack() }
@@ -207,7 +220,7 @@ fun AppRoot() {
 fun CitizenDashboard(
     accountViewModel: CitizenAccountViewModel,
     onEditProfile: () -> Unit,
-    onAddReport: () -> Unit,
+    onAddReport: (Int?) -> Unit,
     onNotificationsClick: () -> Unit,
     onLogout: () -> Unit
 ) {
@@ -346,7 +359,8 @@ fun CitizenDashboard(
             composable(BottomNavScreen.Home.route) {
                 CitizenHomeScreen(
                     viewModel = viewModel,
-                    onReportClick = onAddReport,
+                    onReportClick = { onAddReport(null) },
+                    onReportItemClick = { reportId -> onAddReport(reportId) },
                     onViewAllReports = {
                         dashboardNavController.navigate(BottomNavScreen.Reports.route) {
                             popUpTo(dashboardNavController.graph.findStartDestination().id) {
@@ -359,7 +373,10 @@ fun CitizenDashboard(
                 )
             }
             composable(BottomNavScreen.Reports.route) {
-                CitizenReportsScreen(viewModel = viewModel)
+                CitizenReportsScreen(
+                    viewModel = viewModel,
+                    onReportClick = { reportId -> onAddReport(reportId) }
+                )
             }
             composable(BottomNavScreen.Account.route) {
                 CitizenAccountScreen(
