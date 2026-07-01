@@ -21,7 +21,8 @@ object LocaleHelper {
 
     fun getPersistedLanguage(context: Context): String {
         val preferences: SharedPreferences = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
-        return preferences.getString(SELECTED_LANGUAGE, "ar") ?: "ar"
+        val systemLanguage = Locale.getDefault().language
+        return preferences.getString(SELECTED_LANGUAGE, systemLanguage) ?: systemLanguage
     }
 
     private fun persist(context: Context, languageCode: String) {

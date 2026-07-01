@@ -71,7 +71,7 @@ fun OnboardingScreen(
                     )
                     Spacer(modifier = Modifier.width(10.dp))
                     Text(
-                        text = stringResource(id = R.string.balligh_english),
+                        text = stringResource(id = R.string.app_name),
                         fontSize = 22.sp,
                         fontWeight = FontWeight.ExtraBold,
                         color = Primary

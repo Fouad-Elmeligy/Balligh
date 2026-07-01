@@ -14,7 +14,6 @@ import dagger.hilt.android.AndroidEntryPoint
 class MainActivity : ComponentActivity() {
 
     override fun attachBaseContext(newBase: Context) {
-        // Wrap the context with the saved locale before the activity is created
         super.attachBaseContext(LocaleHelper.wrap(newBase))
     }
 

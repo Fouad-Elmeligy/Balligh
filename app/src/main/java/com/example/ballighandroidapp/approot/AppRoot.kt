@@ -35,7 +35,6 @@ import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.example.ballighandroidapp.R
-import com.example.ballighandroidapp.features.auth.RoleSelectionScreen
 import com.example.ballighandroidapp.features.auth.login.view.LoginScreen
 import com.example.ballighandroidapp.features.auth.register.view.RegisterScreen
 import com.example.ballighandroidapp.features.onboardingScreens.OnboardingScreen
@@ -55,7 +54,6 @@ import com.example.ballighandroidapp.ui.theme.Primary
 sealed class Screen(val route: String) {
     object Splash : Screen("splash")
     object Onboarding : Screen("onboarding")
-    object RoleSelection : Screen("role_selection")
     object Login : Screen("login")
     object Register : Screen("register")
     object Dashboard : Screen("dashboard")
@@ -77,7 +75,6 @@ fun AppRoot() {
     val navController = rememberNavController()
     val context = LocalContext.current
     val appPreferences = remember { AppPreferences(context) }
-    val accountViewModel: CitizenAccountViewModel = hiltViewModel()
 
     NavHost(
         navController = navController,
@@ -111,17 +108,9 @@ fun AppRoot() {
             OnboardingScreen(
                 onFinish = {
                     appPreferences.isFirstTimeLaunch = false
-                    navController.navigate(Screen.RoleSelection.route) {
+                    navController.navigate(Screen.Login.route) {
                         popUpTo(Screen.Onboarding.route) { inclusive = true }
                     }
-                }
-            )
-        }
-
-        composable(Screen.RoleSelection.route) {
-            RoleSelectionScreen(
-                onRoleSelected = { roleId ->
-                    navController.navigate(Screen.Login.route)
                 }
             )
         }
@@ -161,6 +150,8 @@ fun AppRoot() {
         }
 
         composable(Screen.Dashboard.route) {
+            val accountViewModel: CitizenAccountViewModel = hiltViewModel()
+
             LaunchedEffect(Unit) {
                 accountViewModel.prepareEdit()
             }

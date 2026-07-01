@@ -63,7 +63,7 @@ fun RegisterScreen(
                             color = Primary
                         )
                         Text(
-                            text = stringResource(id = R.string.balligh_english),
+                            text = stringResource(id = R.string.app_name),
                             fontSize = 18.sp,
                             fontWeight = FontWeight.Bold,
                             color = Primary,
