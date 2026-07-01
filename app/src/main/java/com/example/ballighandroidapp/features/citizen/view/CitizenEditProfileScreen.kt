@@ -15,12 +15,14 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.CameraAlt
+import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
@@ -43,16 +45,13 @@ fun CitizenEditProfileScreen(
     onBack: () -> Unit
 ) {
     val context = LocalContext.current
-    
-    // 1. Define the Image Picker Launcher
+
     val imagePickerLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.GetContent()
     ) { uri: Uri? ->
         uri?.let {
-            // 2. Intercept URI, copy to internal storage, and get absolute path
             val internalPath = ImageUtils.saveUriToInternalStorage(context, it)
             if (internalPath != null) {
-                // 3. Update ViewModel state
                 viewModel.editPhotoPath = internalPath
             }
         }
@@ -84,13 +83,21 @@ fun CitizenEditProfileScreen(
                 .padding(24.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            // Profile Photo Edit
-            Box(contentAlignment = Alignment.BottomEnd) {
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            // Profile Photo Edit - Professional Stacked Layout
+            Box(
+                contentAlignment = Alignment.Center,
+                modifier = Modifier.size(136.dp) // Slightly larger container for dynamic badges
+            ) {
+                // The Main Avatar Container
                 Surface(
                     modifier = Modifier.size(120.dp),
                     shape = CircleShape,
-                    border = BorderStroke(2.dp, Primary),
-                    color = Color.White
+                    border = BorderStroke(2.dp, Primary.copy(alpha = 0.8f)),
+                    color = Color.White,
+                    shadowElevation = 4.dp
                 ) {
                     if (viewModel.editPhotoPath != null) {
                         Image(
@@ -102,27 +109,46 @@ fun CitizenEditProfileScreen(
                         Icon(
                             imageVector = Icons.Default.Person,
                             contentDescription = null,
-                            modifier = Modifier.padding(24.dp),
-                            tint = Primary.copy(alpha = 0.5f)
+                            modifier = Modifier.padding(28.dp),
+                            tint = Primary.copy(alpha = 0.4f)
                         )
                     }
                 }
-                Surface(
+
+                // Top-Right Badge: Delete Action (Clean Minimalist Circle)
+                if (viewModel.editPhotoPath != null) {
+                    IconButton(
+                        onClick = { viewModel.editPhotoPath = null },
+                        modifier = Modifier
+                            .size(32.dp)
+                            .align(Alignment.TopEnd)
+                            .clip(CircleShape)
+                            .background(Color(0xFFFEE2E2)) // Light Soft Red Background
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Delete,
+                            contentDescription = "Delete Photo",
+                            tint = Color(0xFFEF4444), // Crimson Red
+                            modifier = Modifier.size(16.dp)
+                        )
+                    }
+                }
+
+                // Bottom-End Badge: Camera/Edit Action (Floating Action Circle)
+                IconButton(
+                    onClick = { imagePickerLauncher.launch("image/*") },
                     modifier = Modifier
                         .size(36.dp)
+                        .align(Alignment.BottomEnd)
                         .clip(CircleShape)
-                        .background(Primary)
-                        .clickable { 
-                            // Trigger the launcher
-                            imagePickerLauncher.launch("image/*") 
-                        },
-                    color = Primary
+                        .background(color = Primary)
+                        .shadow(elevation = 2.dp, shape = CircleShape)
                 ) {
                     Icon(
                         imageVector = Icons.Default.CameraAlt,
-                        contentDescription = null,
+                        contentDescription = "Pick Photo",
                         tint = Color.White,
-                        modifier = Modifier.padding(8.dp)
+                        modifier = Modifier.size(18.dp)
                     )
                 }
             }
@@ -152,12 +178,13 @@ fun CitizenEditProfileScreen(
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            // NON-Editable National ID
+            // Professional Look for Non-Editable Fields (Clean Disabled Style)
             Column(modifier = Modifier.fillMaxWidth()) {
                 Text(
                     text = stringResource(id = R.string.user_national_id),
                     fontSize = 14.sp,
                     fontWeight = FontWeight.SemiBold,
+                    color = Color(0xFF64748B), // Slate Grey for subtitle
                     modifier = Modifier.padding(bottom = 8.dp)
                 )
                 OutlinedTextField(
@@ -167,9 +194,9 @@ fun CitizenEditProfileScreen(
                     modifier = Modifier.fillMaxWidth(),
                     shape = RoundedCornerShape(12.dp),
                     colors = OutlinedTextFieldDefaults.colors(
-                        disabledBorderColor = Color.LightGray,
-                        disabledTextColor = Color.Gray,
-                        disabledLabelColor = Color.Gray
+                        disabledContainerColor = Color(0xFFF1F5F9), // Soft grey background for non-editable
+                        disabledBorderColor = Color(0xFFE2E8F0),
+                        disabledTextColor = Color(0xFF94A3B8)
                     )
                 )
             }
@@ -188,20 +215,27 @@ fun CitizenEditProfileScreen(
 
             Spacer(modifier = Modifier.height(40.dp))
 
-            // Save Button
-            BallighButton(
-                text = stringResource(id = R.string.action_save),
-                onClick = {
-                    viewModel.updateProfile {
-                        onBack()
-                    }
-                },
-                enabled = !viewModel.isSaving
-            )
-            
-            if (viewModel.isSaving) {
-                Spacer(modifier = Modifier.height(16.dp))
-                CircularProgressIndicator(color = Primary)
+            // Save Action Layout
+            Box(
+                contentAlignment = Alignment.Center,
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                BallighButton(
+                    text = stringResource(id = R.string.action_save),
+                    onClick = {
+                        viewModel.updateProfile {
+                            onBack()
+                        }
+                    },
+                    enabled = !viewModel.isSaving
+                )
+
+                if (viewModel.isSaving) {
+                    CircularProgressIndicator(
+                        color = Color.White,
+                        modifier = Modifier.size(24.dp) // Fits inside or perfectly overlays without layout shifting
+                    )
+                }
             }
         }
     }

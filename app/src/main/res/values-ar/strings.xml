@@ -295,5 +295,19 @@
     <string name="error_something_went_wrong">شئ خطئ حدث</string>
     <string name="enabled">تم التفعيل</string>
     <string name="disabled">غير مفعل</string>
-
+        <string name="error_photo_required">من فضلك التقط أو حمّل صورة أولاً.</string>
+        <string name="error_title_required">من فضلك أضف عنوانًا للتقرير.</string>
+        <string name="error_content_required">لا يمكن أن يكون محتوى التقرير فارغًا.</string>
+    <string name="prompt_report_title">عنوان التقرير</string>
+    <string name="prompt_choose_photo_source">اختر مصدر الصورة</string>
+    <string name="action_take_photo_camera">التقط صورة بالكاميرا</string>
+    <string name="action_choose_gallery">اختر من المعرض</string>
+    <string name="category_general">عام</string>
+    <string name="category_street_lighting">إنارة الشوارع</string>
+    <string name="category_road_damage">تلف الطريق</string>
+    <string name="category_water_leak">تسرب المياه</string>
+    <string name="category_sanitation">الصرف الصحي</string>
+    <string name="error_session_expired">انتهت الجلسة. يرجى تسجيل الدخول مرة أخرى.</string>
+    <string name="notifications_empty_title">صندوق الإشعارات فارغ</string>
+    <string name="notifications_empty_description">ستظهر هنا التحديثات بخصوص بلاغاتك فور إرسالها من قبل الإدارة.</string>
 </resources>

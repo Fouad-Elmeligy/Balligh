@@ -23,5 +23,5 @@ data class NotificationEntity(
     val userID: Int,
     val message: String,
     val timeDelivered: Long = System.currentTimeMillis(),
-    val isRead: Int //  1: Not Read, 2: Read
+    val isRead: Boolean //  1: Not Read, 2: Read
 )

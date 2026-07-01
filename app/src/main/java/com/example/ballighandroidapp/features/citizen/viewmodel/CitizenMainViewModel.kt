@@ -7,6 +7,7 @@ import com.example.ballighandroidapp.helpers.local.data.entities.ReportEntity
 import com.example.ballighandroidapp.helpers.local.data.repository.ReportRepository
 import com.example.ballighandroidapp.helpers.local.data.repository.UserRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -23,6 +24,7 @@ data class CitizenReportsUiState(
     val selectedFilter: Int = 0 // 0: All, 1: Pending, 2: In Progress, 3: Completed
 )
 
+@OptIn(ExperimentalCoroutinesApi::class)
 @HiltViewModel
 class CitizenMainViewModel @Inject constructor(
     private val reportRepository: ReportRepository,
@@ -36,20 +38,20 @@ class CitizenMainViewModel @Inject constructor(
     private val _reportsState = MutableStateFlow(CitizenReportsUiState())
     val reportsState: StateFlow<CitizenReportsUiState> = _reportsState.asStateFlow()
 
+    private val _selectedFilterFlow = MutableStateFlow(0)
+
     init {
         loadHomeData()
-        loadReports()
+        observeAndFilterReports()
     }
 
     private fun loadHomeData() {
         viewModelScope.launch {
             val nationalId = appPreferences.loggedInNationalId ?: return@launch
-            
-            val userFlow = userRepository.getUserByNationalID(nationalId)
-            
-            userFlow.flatMapLatest { user ->
+
+            userRepository.getUserByNationalID(nationalId).flatMapLatest { user ->
                 if (user == null) return@flatMapLatest flowOf(CitizenHomeUiState())
-                
+
                 reportRepository.getReportsByUser(user.userID).map { list ->
                     val resolvedCount = list.count { it.status == 3 } // 3: Solved
                     CitizenHomeUiState(
@@ -66,31 +68,31 @@ class CitizenMainViewModel @Inject constructor(
     }
 
     fun setReportsFilter(filter: Int) {
+        _selectedFilterFlow.value = filter
         _reportsState.update { it.copy(selectedFilter = filter) }
-        loadReports()
     }
 
-    private fun loadReports() {
+    private fun observeAndFilterReports() {
         viewModelScope.launch {
             val nationalId = appPreferences.loggedInNationalId ?: return@launch
-            val user = userRepository.loginWithNationalID(nationalId, "") // This is just to get user ID, ideally fetch by ID
-            // Actually let's use the flow more efficiently
-            
-            userRepository.getUserByNationalID(nationalId).collectLatest { user ->
-                if (user == null) return@collectLatest
-                
-                val filter = _reportsState.value.selectedFilter
-                reportRepository.getReportsByUser(user.userID).collect { list ->
-                    val filteredList = when (filter) {
-                        0 -> list // All
-                        1 -> list.filter { it.status == 1 } // Pending -> UnderReview
-                        2 -> list.filter { it.status == 2 } // In Progress -> Waiting
-                        3 -> list.filter { it.status == 3 } // Completed -> Solved
-                        else -> list
-                    }
+
+            userRepository.getUserByNationalID(nationalId)
+                .flatMapLatest { user ->
+                    if (user == null) return@flatMapLatest flowOf(emptyList<ReportEntity>())
+
+                    reportRepository.getReportsByUser(user.userID)
+                        .combine(_selectedFilterFlow) { reportsList, currentFilter ->
+                            when (currentFilter) {
+                                0 -> reportsList // الكل
+                                1 -> reportsList.filter { it.status == 1 } // Under Review
+                                2 -> reportsList.filter { it.status == 2 } // Waiting
+                                3 -> reportsList.filter { it.status == 3 } // Solved
+                                else -> reportsList
+                            }
+                        }
+                }.collect { filteredList ->
                     _reportsState.update { it.copy(reports = filteredList) }
                 }
-            }
         }
     }
 }

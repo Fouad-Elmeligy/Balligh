@@ -17,14 +17,13 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.ballighandroidapp.R
+import com.example.ballighandroidapp.components.CitizenReportCard
 import com.example.ballighandroidapp.features.citizen.viewmodel.CitizenMainViewModel
-import com.example.ballighandroidapp.helpers.local.data.entities.ReportEntity
 import com.example.ballighandroidapp.ui.theme.Primary
 import androidx.compose.foundation.BorderStroke
 
@@ -36,7 +35,6 @@ fun CitizenHomeScreen(
 ) {
     val state by viewModel.homeState.collectAsState()
     
-    // Logic for Dynamic First Name display
     val displayName = state.userName?.trim()?.split(" ")?.firstOrNull() ?: ""
 
     Column(
@@ -46,7 +44,7 @@ fun CitizenHomeScreen(
             .verticalScroll(rememberScrollState())
             .padding(24.dp)
     ) {
-        // Welcome Section - Dynamic First Name
+        // Welcome Section
         Text(
             text = if (displayName.isNotEmpty()) 
                 stringResource(id = R.string.format_welcome_user, displayName)
@@ -66,7 +64,7 @@ fun CitizenHomeScreen(
 
         Spacer(modifier = Modifier.height(32.dp))
 
-        // Primary Action Card (Reporting) - Re-aligned to Center-Focused Style
+        // Primary Action Card
         Surface(
             modifier = Modifier
                 .fillMaxWidth()
@@ -77,7 +75,6 @@ fun CitizenHomeScreen(
             shadowElevation = 8.dp
         ) {
             Box(modifier = Modifier.fillMaxSize()) {
-                // Decorative element
                 Surface(
                     modifier = Modifier
                         .align(Alignment.TopEnd)
@@ -108,7 +105,7 @@ fun CitizenHomeScreen(
                     Text(
                         text = stringResource(id = R.string.report_reporting_action),
                         color = Color.White,
-                        fontSize = 28.sp, // Slightly increased typography size
+                        fontSize = 28.sp, 
                         fontWeight = FontWeight.Bold
                     )
                 }
@@ -129,7 +126,7 @@ fun CitizenHomeScreen(
             )
             StatCard(
                 count = state.resolvedReports.toString(),
-                label = "Resolved",
+                label = stringResource(id = R.string.report_resolved),
                 modifier = Modifier.weight(1f)
             )
         }
@@ -143,7 +140,7 @@ fun CitizenHomeScreen(
             verticalAlignment = Alignment.CenterVertically
         ) {
             Text(
-                text = "Latest Reports",
+                text = stringResource(id = R.string.report_latest),
                 fontSize = 20.sp,
                 fontWeight = FontWeight.Bold,
                 color = Color(0xFF0F172A)
@@ -159,7 +156,6 @@ fun CitizenHomeScreen(
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        // Column for latest reports
         state.latestReports.forEach { report ->
             CitizenReportCard(report = report)
             Spacer(modifier = Modifier.height(16.dp))
@@ -181,86 +177,6 @@ fun StatCard(count: String, label: String, modifier: Modifier = Modifier) {
         ) {
             Text(text = count, fontSize = 26.sp, fontWeight = FontWeight.ExtraBold, color = Color(0xFF0F172A))
             Text(text = label, fontSize = 14.sp, color = Color(0xFF64748B), fontWeight = FontWeight.Medium)
-        }
-    }
-}
-
-@Composable
-fun CitizenReportCard(report: ReportEntity) {
-    Card(
-        modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(24.dp),
-        colors = CardDefaults.cardColors(containerColor = Color.White),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
-    ) {
-        Row(
-            modifier = Modifier.padding(16.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            // Mock Image Placeholder
-            Surface(
-                modifier = Modifier.size(70.dp),
-                shape = RoundedCornerShape(16.dp),
-                color = Primary.copy(alpha = 0.05f)
-            ) {
-                Icon(
-                    painter = painterResource(id = R.drawable.splashscreen1photo),
-                    contentDescription = null,
-                    tint = Color.Unspecified,
-                    modifier = Modifier.padding(8.dp)
-                )
-            }
-
-            Spacer(modifier = Modifier.width(16.dp))
-
-            Column(modifier = Modifier.weight(1f)) {
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Text(text = "#BAL-${report.reportID}", color = Color.Gray, fontSize = 12.sp, fontWeight = FontWeight.Medium)
-                    StatusBadge(status = report.status)
-                }
-                Spacer(modifier = Modifier.height(6.dp))
-                Text(
-                    text = report.title,
-                    fontWeight = FontWeight.Bold,
-                    fontSize = 16.sp,
-                    color = Color(0xFF0F172A),
-                    maxLines = 1
-                )
-                Text(
-                    text = report.location ?: report.district,
-                    color = Color(0xFF64748B),
-                    fontSize = 13.sp,
-                    maxLines = 1
-                )
-            }
-        }
-    }
-}
-
-@Composable
-fun StatusBadge(status: Int) {
-    val (text, color, bgColor) = when (status) {
-        1 -> Triple("Under Review", Color(0xFFB45309), Color(0xFFFFFBEB))
-        2 -> Triple("Waiting", Color(0xFF1D4ED8), Color(0xFFEFF6FF))
-        3 -> Triple("Solved", Color(0xFF047857), Color(0xFFF0FDF4))
-        else -> Triple("Pending", Color.Gray, Color.LightGray.copy(alpha = 0.2f))
-    }
-
-    Surface(
-        color = bgColor,
-        shape = RoundedCornerShape(12.dp)
-    ) {
-        Row(
-            modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Box(modifier = Modifier.size(6.dp).clip(CircleShape).background(color))
-            Spacer(modifier = Modifier.width(6.dp))
-            Text(text = text, color = color, fontSize = 11.sp, fontWeight = FontWeight.ExtraBold)
         }
     }
 }

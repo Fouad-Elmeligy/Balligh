@@ -42,8 +42,11 @@ import com.example.ballighandroidapp.features.citizen.view.CitizenHomeScreen
 import com.example.ballighandroidapp.features.citizen.view.CitizenReportsScreen
 import com.example.ballighandroidapp.features.citizen.view.CitizenAccountScreen
 import com.example.ballighandroidapp.features.citizen.view.CitizenEditProfileScreen
+import com.example.ballighandroidapp.features.citizen.view.CitizenAddReportScreen
+import com.example.ballighandroidapp.features.citizen.view.CitizenNotificationScreen // 👈 استيراد الشاشة الجديدة
 import com.example.ballighandroidapp.features.citizen.viewmodel.CitizenMainViewModel
 import com.example.ballighandroidapp.features.citizen.viewmodel.CitizenAccountViewModel
+import com.example.ballighandroidapp.features.citizen.viewmodel.NotificationViewModel // 👈 استيراد الـ ViewModel الجديد
 import com.example.ballighandroidapp.helpers.local.AppPreferences
 import com.example.ballighandroidapp.ui.theme.Primary
 
@@ -55,6 +58,8 @@ sealed class Screen(val route: String) {
     object Register : Screen("register")
     object Dashboard : Screen("dashboard")
     object EditProfile : Screen("edit_profile")
+    object AddReport : Screen("add_report")
+    object Notifications : Screen("notifications")
 }
 
 sealed class BottomNavScreen(val route: String, val title: Int, val icon: ImageVector) {
@@ -68,7 +73,6 @@ fun AppRoot() {
     val navController = rememberNavController()
     val context = LocalContext.current
     val appPreferences = remember { AppPreferences(context) }
-    val accountViewModel: CitizenAccountViewModel = hiltViewModel()
 
     NavHost(
         navController = navController,
@@ -84,7 +88,6 @@ fun AppRoot() {
                             }
                         }
                         appPreferences.isUserLoggedIn -> {
-                            accountViewModel.prepareEdit()
                             navController.navigate(Screen.Dashboard.route) {
                                 popUpTo(Screen.Splash.route) { inclusive = true }
                             }
@@ -153,9 +156,17 @@ fun AppRoot() {
         }
 
         composable(Screen.Dashboard.route) {
+            val accountViewModel: CitizenAccountViewModel = hiltViewModel()
+
+            LaunchedEffect(Unit) {
+                accountViewModel.prepareEdit()
+            }
+
             CitizenDashboard(
                 accountViewModel = accountViewModel,
                 onEditProfile = { navController.navigate(Screen.EditProfile.route) },
+                onAddReport = { navController.navigate(Screen.AddReport.route) },
+                onNotificationsClick = { navController.navigate(Screen.Notifications.route) }, // 👈 ربط كليك الجرس
                 onLogout = {
                     appPreferences.logout()
                     navController.navigate(Screen.Login.route) {
@@ -166,8 +177,26 @@ fun AppRoot() {
         }
 
         composable(Screen.EditProfile.route) {
+            val dashboardEntry = remember(navController) { navController.getBackStackEntry(Screen.Dashboard.route) }
+            val accountViewModel: CitizenAccountViewModel = hiltViewModel(dashboardEntry)
+
             CitizenEditProfileScreen(
                 viewModel = accountViewModel,
+                onBack = { navController.popBackStack() }
+            )
+        }
+
+        composable(Screen.AddReport.route) {
+            CitizenAddReportScreen(
+                onBackClick = { navController.popBackStack() },
+                onReportSent = { navController.popBackStack() }
+            )
+        }
+
+        composable(Screen.Notifications.route) {
+            val notificationViewModel: NotificationViewModel = hiltViewModel()
+            CitizenNotificationScreen(
+                viewModel = notificationViewModel,
                 onBack = { navController.popBackStack() }
             )
         }
@@ -178,6 +207,8 @@ fun AppRoot() {
 fun CitizenDashboard(
     accountViewModel: CitizenAccountViewModel,
     onEditProfile: () -> Unit,
+    onAddReport: () -> Unit,
+    onNotificationsClick: () -> Unit,
     onLogout: () -> Unit
 ) {
     val dashboardNavController = rememberNavController()
@@ -218,7 +249,7 @@ fun CitizenDashboard(
                         )
                         Spacer(modifier = Modifier.width(12.dp))
                         Text(
-                            text = stringResource(id = R.string.balligh_english),
+                            text = stringResource(id = R.string.app_name),
                             fontSize = 20.sp,
                             fontWeight = FontWeight.ExtraBold,
                             color = Primary,
@@ -230,7 +261,7 @@ fun CitizenDashboard(
                         color = Primary.copy(alpha = 0.08f),
                         modifier = Modifier.size(40.dp)
                     ) {
-                        IconButton(onClick = { /* Notifications */ }) {
+                        IconButton(onClick = onNotificationsClick) {
                             Icon(
                                 imageVector = Icons.Default.Notifications,
                                 contentDescription = null,
@@ -315,7 +346,7 @@ fun CitizenDashboard(
             composable(BottomNavScreen.Home.route) {
                 CitizenHomeScreen(
                     viewModel = viewModel,
-                    onReportClick = { /* Navigate to Create Report screen */ },
+                    onReportClick = onAddReport,
                     onViewAllReports = {
                         dashboardNavController.navigate(BottomNavScreen.Reports.route) {
                             popUpTo(dashboardNavController.graph.findStartDestination().id) {

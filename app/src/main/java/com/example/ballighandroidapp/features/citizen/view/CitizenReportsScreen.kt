@@ -18,6 +18,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.ballighandroidapp.R
+import com.example.ballighandroidapp.components.CitizenReportCard
 import com.example.ballighandroidapp.features.citizen.viewmodel.CitizenMainViewModel
 import com.example.ballighandroidapp.ui.theme.Primary
 

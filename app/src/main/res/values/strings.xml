@@ -314,5 +314,20 @@
     <string name="error_something_went_wrong">Something went wrong</string>
     <string name="enabled">enabled</string>
     <string name="disabled">disabled</string>
+        <string name="error_photo_required">Please capture or upload a photo first.</string>
+        <string name="error_title_required">Please add a title for the report.</string>
+        <string name="error_content_required">Report content cannot be empty.</string>
 
+    <string name="prompt_report_title">Report Title</string>
+    <string name="prompt_choose_photo_source">Choose photo source</string>
+    <string name="action_take_photo_camera">Take photo with camera</string>
+    <string name="action_choose_gallery">Choose from gallery</string>
+    <string name="category_general">General</string>
+    <string name="category_street_lighting">Street Lighting</string>
+    <string name="category_road_damage">Road Damage</string>
+    <string name="category_water_leak">Water Leak</string>
+    <string name="category_sanitation">Sanitation</string>
+    <string name="error_session_expired">Session expired. Please login again.</string>
+    <string name="notifications_empty_title">Notifications box is empty</string>
+    <string name="notifications_empty_description">Updates about your reports will appear here once sent by the administration.</string>
 </resources>

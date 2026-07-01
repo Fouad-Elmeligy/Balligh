@@ -36,7 +36,8 @@ import com.example.ballighandroidapp.R
 import com.example.ballighandroidapp.features.citizen.viewmodel.CitizenAccountViewModel
 import com.example.ballighandroidapp.ui.theme.Error
 import com.example.ballighandroidapp.ui.theme.Primary
-
+import android.app.Activity
+import com.example.ballighandroidapp.helpers.LocaleHelper
 @Composable
 fun CitizenAccountScreen(
     viewModel: CitizenAccountViewModel,
@@ -134,8 +135,30 @@ fun CitizenAccountScreen(
                     icon = Icons.Default.Language,
                     title = stringResource(id = R.string.settings_app_language),
                     showLanguageToggle = true,
-                    currentLanguageCode = viewModel.currentLanguageCode,
-                    onLanguageChange = { viewModel.changeLanguage(it) },
+                    currentLanguageCode = LocaleHelper.getPersistedLanguage(context),
+                    onLanguageChange = { newLangCode ->
+                        viewModel.changeLanguage(newLangCode)
+
+                        LocaleHelper.setLanguage(context, newLangCode)
+
+                        val activity = context as? Activity
+                        activity?.let {
+                            val intent = it.intent
+                            it.finish()
+                            it.startActivity(intent)
+
+                            if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
+                                it.overrideActivityTransition(
+                                    Activity.OVERRIDE_TRANSITION_OPEN,
+                                    android.R.anim.fade_in,
+                                    android.R.anim.fade_out
+                                )
+                            } else {
+                                @Suppress("DEPRECATION")
+                                it.overridePendingTransition(android.R.anim.fade_in, android.R.anim.fade_out)
+                            }
+                        }
+                    },
                     onClick = {}
                 )
 
