@@ -15,7 +15,6 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
@@ -31,10 +30,11 @@ import androidx.compose.foundation.BorderStroke
 fun CitizenHomeScreen(
     viewModel: CitizenMainViewModel,
     onReportClick: () -> Unit,
-    onViewAllReports: () -> Unit
+    onViewAllReports: () -> Unit,
+    onReportDetailClick: (Int) -> Unit
 ) {
     val state by viewModel.homeState.collectAsState()
-    
+
     val displayName = state.userName?.trim()?.split(" ")?.firstOrNull() ?: ""
 
     Column(
@@ -46,9 +46,9 @@ fun CitizenHomeScreen(
     ) {
         // Welcome Section
         Text(
-            text = if (displayName.isNotEmpty()) 
+            text = if (displayName.isNotEmpty())
                 stringResource(id = R.string.format_welcome_user, displayName)
-            else 
+            else
                 stringResource(id = R.string.promo_welcome),
             fontSize = 32.sp,
             fontWeight = FontWeight.Bold,
@@ -105,7 +105,7 @@ fun CitizenHomeScreen(
                     Text(
                         text = stringResource(id = R.string.report_reporting_action),
                         color = Color.White,
-                        fontSize = 28.sp, 
+                        fontSize = 28.sp,
                         fontWeight = FontWeight.Bold
                     )
                 }
@@ -157,7 +157,7 @@ fun CitizenHomeScreen(
         Spacer(modifier = Modifier.height(16.dp))
 
         state.latestReports.forEach { report ->
-            CitizenReportCard(report = report)
+            CitizenReportCard(report = report, onClick = { onReportDetailClick(report.reportID) })
             Spacer(modifier = Modifier.height(16.dp))
         }
     }
@@ -175,8 +175,18 @@ fun StatCard(count: String, label: String, modifier: Modifier = Modifier) {
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center
         ) {
-            Text(text = count, fontSize = 26.sp, fontWeight = FontWeight.ExtraBold, color = Color(0xFF0F172A))
-            Text(text = label, fontSize = 14.sp, color = Color(0xFF64748B), fontWeight = FontWeight.Medium)
+            Text(
+                text = count,
+                fontSize = 26.sp,
+                fontWeight = FontWeight.ExtraBold,
+                color = Color(0xFF0F172A)
+            )
+            Text(
+                text = label,
+                fontSize = 14.sp,
+                color = Color(0xFF64748B),
+                fontWeight = FontWeight.Medium
+            )
         }
     }
 }

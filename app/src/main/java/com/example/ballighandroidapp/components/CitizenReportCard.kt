@@ -24,8 +24,9 @@ import com.example.ballighandroidapp.helpers.local.data.entities.ReportEntity
  * Used in both HomeScreen and ReportsScreen.
  */
 @Composable
-fun CitizenReportCard(report: ReportEntity) {
+fun CitizenReportCard(report: ReportEntity, onClick: () -> Unit) {
     Card(
+        onClick = onClick,
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(24.dp),
         colors = CardDefaults.cardColors(containerColor = Color.White),

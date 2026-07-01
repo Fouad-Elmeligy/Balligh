@@ -1,5 +1,6 @@
 package com.example.ballighandroidapp.approot
 
+import android.annotation.SuppressLint
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -28,10 +29,12 @@ import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavDestination.Companion.hierarchy
 import androidx.navigation.NavGraph.Companion.findStartDestination
+import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
+import androidx.navigation.navArgument
 import com.example.ballighandroidapp.R
 import com.example.ballighandroidapp.features.auth.RoleSelectionScreen
 import com.example.ballighandroidapp.features.auth.login.view.LoginScreen
@@ -44,6 +47,7 @@ import com.example.ballighandroidapp.features.citizen.view.CitizenAccountScreen
 import com.example.ballighandroidapp.features.citizen.view.CitizenEditProfileScreen
 import com.example.ballighandroidapp.features.citizen.view.CitizenAddReportScreen
 import com.example.ballighandroidapp.features.citizen.view.CitizenNotificationScreen // 👈 استيراد الشاشة الجديدة
+import com.example.ballighandroidapp.features.citizen.view.CitizenReportDetailScreen
 import com.example.ballighandroidapp.features.citizen.viewmodel.CitizenMainViewModel
 import com.example.ballighandroidapp.features.citizen.viewmodel.CitizenAccountViewModel
 import com.example.ballighandroidapp.features.citizen.viewmodel.NotificationViewModel // 👈 استيراد الـ ViewModel الجديد
@@ -60,6 +64,9 @@ sealed class Screen(val route: String) {
     object EditProfile : Screen("edit_profile")
     object AddReport : Screen("add_report")
     object Notifications : Screen("notifications")
+    object ReportDetail : Screen("report_detail/{reportId}") {
+        fun createRoute(reportId: Int) = "report_detail/$reportId"
+    }
 }
 
 sealed class BottomNavScreen(val route: String, val title: Int, val icon: ImageVector) {
@@ -68,6 +75,7 @@ sealed class BottomNavScreen(val route: String, val title: Int, val icon: ImageV
     object Account : BottomNavScreen("account_tab", R.string.nav_my_account, Icons.Default.Person)
 }
 
+@SuppressLint("UnrememberedGetBackStackEntry")
 @Composable
 fun AppRoot() {
     val navController = rememberNavController()
@@ -167,6 +175,9 @@ fun AppRoot() {
                 onEditProfile = { navController.navigate(Screen.EditProfile.route) },
                 onAddReport = { navController.navigate(Screen.AddReport.route) },
                 onNotificationsClick = { navController.navigate(Screen.Notifications.route) }, // 👈 ربط كليك الجرس
+                onReportDetailClick = { reportId ->
+                    navController.navigate(Screen.ReportDetail.createRoute(reportId))
+                },
                 onLogout = {
                     appPreferences.logout()
                     navController.navigate(Screen.Login.route) {
@@ -200,6 +211,17 @@ fun AppRoot() {
                 onBack = { navController.popBackStack() }
             )
         }
+
+        composable(
+            route = Screen.ReportDetail.route,
+            arguments = listOf(navArgument("reportId") { type = NavType.IntType })
+        ) { backStackEntry ->
+            val reportId = backStackEntry.arguments?.getInt("reportId") ?: return@composable
+            CitizenReportDetailScreen(
+                reportId = reportId,
+                onBackClick = { navController.popBackStack() }
+            )
+        }
     }
 }
 
@@ -209,6 +231,7 @@ fun CitizenDashboard(
     onEditProfile: () -> Unit,
     onAddReport: () -> Unit,
     onNotificationsClick: () -> Unit,
+    onReportDetailClick: (Int) -> Unit,
     onLogout: () -> Unit
 ) {
     val dashboardNavController = rememberNavController()
@@ -292,7 +315,8 @@ fun CitizenDashboard(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     items.forEach { screen ->
-                        val selected = currentDestination?.hierarchy?.any { it.route == screen.route } == true
+                        val selected =
+                            currentDestination?.hierarchy?.any { it.route == screen.route } == true
 
                         Box(
                             modifier = Modifier.weight(1f),
@@ -355,11 +379,15 @@ fun CitizenDashboard(
                             launchSingleTop = true
                             restoreState = true
                         }
-                    }
+                    },
+                    onReportDetailClick = onReportDetailClick
                 )
             }
             composable(BottomNavScreen.Reports.route) {
-                CitizenReportsScreen(viewModel = viewModel)
+                CitizenReportsScreen(
+                    viewModel = viewModel,
+                    onReportClick = onReportDetailClick
+                )
             }
             composable(BottomNavScreen.Account.route) {
                 CitizenAccountScreen(
