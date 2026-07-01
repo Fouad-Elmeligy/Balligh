@@ -45,7 +45,6 @@ fun LoginScreen(
             .fillMaxSize()
             .background(Color(0xFFF8FAFC))
     ) {
-        // Top Background Gradient
         Box(
             modifier = Modifier
                 .fillMaxWidth()
@@ -68,7 +67,6 @@ fun LoginScreen(
         ) {
             Spacer(modifier = Modifier.height(60.dp))
 
-            // Logo
             Surface(
                 modifier = Modifier
                     .size(80.dp)
@@ -101,7 +99,6 @@ fun LoginScreen(
 
             Spacer(modifier = Modifier.height(32.dp))
 
-            // Login Card
             Surface(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -115,7 +112,6 @@ fun LoginScreen(
                     modifier = Modifier
                         .padding(24.dp)
                 ) {
-                    // General Error Message
                     viewModel.generalErrorResId?.let { errorId ->
                         Text(
                             text = stringResource(id = errorId),
@@ -190,7 +186,6 @@ fun LoginScreen(
 
                     Spacer(modifier = Modifier.height(40.dp))
 
-                    // Bottom Links
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.Center,

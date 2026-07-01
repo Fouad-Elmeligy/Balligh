@@ -7,6 +7,7 @@ interface UserRepository {
     suspend fun insertUser(user: UserEntity)
     suspend fun updateUser(user: UserEntity)
     suspend fun getUserById(id: Int): UserEntity?
+    fun getUserByNationalID(nationalID: String): Flow<UserEntity?>
     fun getAllUsers(): Flow<List<UserEntity>>
     fun getUsersByRole(roleId: Int): Flow<List<UserEntity>>
     fun getUsersByDistrict(districtName: String): Flow<List<UserEntity>>

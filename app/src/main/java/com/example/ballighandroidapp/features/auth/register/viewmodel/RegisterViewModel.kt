@@ -6,6 +6,7 @@ import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.ballighandroidapp.R
+import com.example.ballighandroidapp.helpers.local.AppPreferences
 import com.example.ballighandroidapp.helpers.local.data.entities.UserEntity
 import com.example.ballighandroidapp.helpers.local.data.repository.UserRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -14,7 +15,8 @@ import javax.inject.Inject
 
 @HiltViewModel
 class RegisterViewModel @Inject constructor(
-    private val userRepository: UserRepository
+    private val userRepository: UserRepository,
+    private val appPreferences: AppPreferences
 ) : ViewModel() {
 
     var fullName by mutableStateOf("")
@@ -35,10 +37,16 @@ class RegisterViewModel @Inject constructor(
     var fullNameErrorResId by mutableStateOf<Int?>(null)
         private set
 
+    var phoneErrorResId by mutableStateOf<Int?>(null)
+        private set
+
     var nationalIdErrorResId by mutableStateOf<Int?>(null)
         private set
 
     var passwordErrorResId by mutableStateOf<Int?>(null)
+        private set
+
+    var generalErrorResId by mutableStateOf<Int?>(null)
         private set
 
     var isLoading by mutableStateOf(false)
@@ -54,6 +62,7 @@ class RegisterViewModel @Inject constructor(
     fun onPhoneChange(newValue: String) {
         if (newValue.length <= 11 && newValue.all { it.isDigit() }) {
             phone = newValue
+            phoneErrorResId = null
         }
     }
 
@@ -61,6 +70,7 @@ class RegisterViewModel @Inject constructor(
         if (newValue.length <= 14 && newValue.all { it.isDigit() }) {
             nationalId = newValue
             nationalIdErrorResId = null
+            generalErrorResId = null
         }
     }
 
@@ -73,32 +83,36 @@ class RegisterViewModel @Inject constructor(
         agreedToTerms = newValue
     }
 
-    val isFormValid: Boolean
-        get() = fullName.isNotBlank() &&
-                nameRegex.matches(fullName) &&
-                (phone.length == 10 || phone.length == 11) &&
-                nationalId.length == 14 &&
-                password.isNotBlank() &&
-                agreedToTerms
-
     fun register(onSuccess: () -> Unit) {
         if (validate()) {
             viewModelScope.launch {
                 isLoading = true
                 try {
+                    // Check if National ID already exists
+                    if (userRepository.isNationalIDRepeated(nationalId)) {
+                        nationalIdErrorResId = R.string.error_national_id_exists
+                        isLoading = false
+                        return@launch
+                    }
+
                     val newUser = UserEntity(
-                        fullName = fullName,
+                        fullName = fullName.trim(),
                         nationalID = nationalId,
                         password = password,
                         phone = phone,
                         role = 1, // Default role: Citizen
-                        district = "", // Default empty as not in UI
+                        district = "", // Default empty
                         accountStatus = 1 // Active
                     )
                     userRepository.insertUser(newUser)
+                    
+                    // Fix: Explicitly save session data after successful registration
+                    appPreferences.loggedInNationalId = nationalId
+                    appPreferences.isUserLoggedIn = true
+                    
                     onSuccess()
                 } catch (e: Exception) {
-                    // Handle error if needed
+                    generalErrorResId = R.string.error_something_went_wrong
                 } finally {
                     isLoading = false
                 }
@@ -117,24 +131,29 @@ class RegisterViewModel @Inject constructor(
             isValid = false
         }
 
+        if (phone.isBlank()) {
+            phoneErrorResId = R.string.error_phone_empty
+            isValid = false
+        } else if (phone.length < 10) {
+            phoneErrorResId = R.string.error_invalid_phone
+            isValid = false
+        }
+
         if (nationalId.length != 14) {
             nationalIdErrorResId = R.string.error_invalid_national_id
             isValid = false
         }
 
-        val passwordPattern = "^(?=.*[0-9])(?=.*[a-z])(?=.*[A-Z]).{8,}$".toRegex()
         if (password.isBlank()) {
             passwordErrorResId = R.string.error_password_empty
             isValid = false
         } else if (password.length < 8) {
             passwordErrorResId = R.string.error_password_length
             isValid = false
-        } else if (!passwordPattern.matches(password)) {
-            passwordErrorResId = R.string.error_password_weak
-            isValid = false
         }
 
         if (!agreedToTerms) {
+            generalErrorResId = R.string.error_must_accept_terms
             isValid = false
         }
 

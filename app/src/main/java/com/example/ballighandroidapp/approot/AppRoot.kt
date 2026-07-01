@@ -1,10 +1,15 @@
 package com.example.ballighandroidapp.approot
 
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Home
+import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.outlined.Assignment
 import androidx.compose.material3.*
@@ -15,8 +20,11 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavDestination.Companion.hierarchy
 import androidx.navigation.NavGraph.Companion.findStartDestination
@@ -24,6 +32,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
+import com.example.ballighandroidapp.R
 import com.example.ballighandroidapp.features.auth.RoleSelectionScreen
 import com.example.ballighandroidapp.features.auth.login.view.LoginScreen
 import com.example.ballighandroidapp.features.auth.register.view.RegisterScreen
@@ -32,7 +41,9 @@ import com.example.ballighandroidapp.features.splashScreen.SplashScreen
 import com.example.ballighandroidapp.features.citizen.view.CitizenHomeScreen
 import com.example.ballighandroidapp.features.citizen.view.CitizenReportsScreen
 import com.example.ballighandroidapp.features.citizen.view.CitizenAccountScreen
+import com.example.ballighandroidapp.features.citizen.view.CitizenEditProfileScreen
 import com.example.ballighandroidapp.features.citizen.viewmodel.CitizenMainViewModel
+import com.example.ballighandroidapp.features.citizen.viewmodel.CitizenAccountViewModel
 import com.example.ballighandroidapp.helpers.local.AppPreferences
 import com.example.ballighandroidapp.ui.theme.Primary
 
@@ -43,12 +54,13 @@ sealed class Screen(val route: String) {
     object Login : Screen("login")
     object Register : Screen("register")
     object Dashboard : Screen("dashboard")
+    object EditProfile : Screen("edit_profile")
 }
 
-sealed class BottomNavScreen(val route: String, val title: String, val icon: ImageVector) {
-    object Home : BottomNavScreen("home_tab", "Home", Icons.Default.Home)
-    object Reports : BottomNavScreen("reports_tab", "Reports", Icons.Outlined.Assignment)
-    object Account : BottomNavScreen("account_tab", "Account", Icons.Default.Person)
+sealed class BottomNavScreen(val route: String, val title: Int, val icon: ImageVector) {
+    object Home : BottomNavScreen("home_tab", R.string.nav_home, Icons.Default.Home)
+    object Reports : BottomNavScreen("reports_tab", R.string.nav_reports, Icons.Outlined.Assignment)
+    object Account : BottomNavScreen("account_tab", R.string.nav_my_account, Icons.Default.Person)
 }
 
 @Composable
@@ -56,6 +68,7 @@ fun AppRoot() {
     val navController = rememberNavController()
     val context = LocalContext.current
     val appPreferences = remember { AppPreferences(context) }
+    val accountViewModel: CitizenAccountViewModel = hiltViewModel()
 
     NavHost(
         navController = navController,
@@ -71,6 +84,7 @@ fun AppRoot() {
                             }
                         }
                         appPreferences.isUserLoggedIn -> {
+                            accountViewModel.prepareEdit()
                             navController.navigate(Screen.Dashboard.route) {
                                 popUpTo(Screen.Splash.route) { inclusive = true }
                             }
@@ -118,7 +132,7 @@ fun AppRoot() {
                 onForgotPassword = {}
             )
         }
-        
+
         composable(Screen.Register.route) {
             RegisterScreen(
                 onRegisterSuccess = {
@@ -139,105 +153,189 @@ fun AppRoot() {
         }
 
         composable(Screen.Dashboard.route) {
-            CitizenDashboard(onLogout = {
-                appPreferences.logout()
-                navController.navigate(Screen.Login.route) {
-                    popUpTo(Screen.Dashboard.route) { inclusive = true }
+            CitizenDashboard(
+                accountViewModel = accountViewModel,
+                onEditProfile = { navController.navigate(Screen.EditProfile.route) },
+                onLogout = {
+                    appPreferences.logout()
+                    navController.navigate(Screen.Login.route) {
+                        popUpTo(Screen.Dashboard.route) { inclusive = true }
+                    }
                 }
-            })
+            )
+        }
+
+        composable(Screen.EditProfile.route) {
+            CitizenEditProfileScreen(
+                viewModel = accountViewModel,
+                onBack = { navController.popBackStack() }
+            )
         }
     }
 }
 
 @Composable
-fun CitizenDashboard(onLogout: () -> Unit) {
+fun CitizenDashboard(
+    accountViewModel: CitizenAccountViewModel,
+    onEditProfile: () -> Unit,
+    onLogout: () -> Unit
+) {
     val dashboardNavController = rememberNavController()
     val viewModel: CitizenMainViewModel = hiltViewModel()
-    
+
     val items = listOf(
         BottomNavScreen.Home,
         BottomNavScreen.Reports,
         BottomNavScreen.Account
     )
 
+    val selectedPillColor = Color(0xFFD3E3DC)
+    val selectedContentColor = Color(0xFF1B4332)
+    val unselectedContentColor = Color(0xFF6B6B6B)
+
     Scaffold(
-        containerColor = Color(0xFFF1F4F9), // Professional light background
+        containerColor = Color(0xFFF1F4F9),
+        topBar = {
+            Surface(
+                modifier = Modifier.fillMaxWidth(),
+                color = Color.White,
+                shadowElevation = 0.5.dp
+            ) {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .statusBarsPadding()
+                        .height(64.dp)
+                        .padding(horizontal = 24.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Image(
+                            painter = painterResource(id = R.drawable.logodark),
+                            contentDescription = null,
+                            modifier = Modifier.size(32.dp)
+                        )
+                        Spacer(modifier = Modifier.width(12.dp))
+                        Text(
+                            text = stringResource(id = R.string.balligh_english),
+                            fontSize = 20.sp,
+                            fontWeight = FontWeight.ExtraBold,
+                            color = Primary,
+                            letterSpacing = (-0.5).sp
+                        )
+                    }
+                    Surface(
+                        shape = CircleShape,
+                        color = Primary.copy(alpha = 0.08f),
+                        modifier = Modifier.size(40.dp)
+                    ) {
+                        IconButton(onClick = { /* Notifications */ }) {
+                            Icon(
+                                imageVector = Icons.Default.Notifications,
+                                contentDescription = null,
+                                tint = Primary,
+                                modifier = Modifier.size(22.dp)
+                            )
+                        }
+                    }
+                }
+            }
+        },
         bottomBar = {
             Surface(
                 color = Color.White,
                 tonalElevation = 8.dp,
                 modifier = Modifier.clip(RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp))
             ) {
-                NavigationBar(
-                    containerColor = Color.White,
-                    modifier = Modifier.height(80.dp)
+                val navBackStackEntry by dashboardNavController.currentBackStackEntryAsState()
+                val currentDestination = navBackStackEntry?.destination
+
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .background(Color.White)
+                        .navigationBarsPadding()
+                        .padding(horizontal = 8.dp, vertical = 6.dp),
+                    horizontalArrangement = Arrangement.SpaceEvenly,
+                    verticalAlignment = Alignment.CenterVertically
                 ) {
-                    val navBackStackEntry by dashboardNavController.currentBackStackEntryAsState()
-                    val currentDestination = navBackStackEntry?.destination
-                    
                     items.forEach { screen ->
                         val selected = currentDestination?.hierarchy?.any { it.route == screen.route } == true
-                        NavigationBarItem(
-                            icon = { 
-                                Box(
-                                    modifier = Modifier
-                                        .size(width = 64.dp, height = 32.dp)
-                                        .clip(RoundedCornerShape(16.dp))
-                                        .background(if (selected) Primary.copy(alpha = 0.15f) else Color.Transparent),
-                                    contentAlignment = Alignment.Center
-                                ) {
-                                    Icon(
-                                        imageVector = screen.icon, 
-                                        contentDescription = null, 
-                                        tint = if (selected) Primary else Color.Gray,
-                                        modifier = Modifier.size(24.dp)
-                                    )
-                                }
-                            },
-                            label = { 
-                                Text(
-                                    text = screen.title, 
-                                    style = MaterialTheme.typography.labelMedium,
-                                    fontWeight = if (selected) FontWeight.Bold else FontWeight.Medium,
-                                    color = if (selected) Primary else Color.Gray
-                                ) 
-                            },
-                            selected = selected,
-                            onClick = {
-                                dashboardNavController.navigate(screen.route) {
-                                    popUpTo(dashboardNavController.graph.findStartDestination().id) {
-                                        saveState = true
+
+                        Box(
+                            modifier = Modifier.weight(1f),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Column(
+                                horizontalAlignment = Alignment.CenterHorizontally,
+                                verticalArrangement = Arrangement.Center,
+                                modifier = Modifier
+                                    .clip(RoundedCornerShape(18.dp))
+                                    .background(if (selected) selectedPillColor else Color.Transparent)
+                                    .clickable(
+                                        interactionSource = remember { MutableInteractionSource() },
+                                        indication = null
+                                    ) {
+                                        dashboardNavController.navigate(screen.route) {
+                                            popUpTo(dashboardNavController.graph.findStartDestination().id) {
+                                                saveState = true
+                                            }
+                                            launchSingleTop = true
+                                            restoreState = true
+                                        }
                                     }
-                                    launchSingleTop = true
-                                    restoreState = true
-                                }
-                            },
-                            colors = NavigationBarItemDefaults.colors(
-                                indicatorColor = Color.Transparent
-                            )
-                        )
+                                    .padding(horizontal = 16.dp, vertical = 8.dp)
+                            ) {
+                                Icon(
+                                    imageVector = screen.icon,
+                                    contentDescription = null,
+                                    modifier = Modifier.size(20.dp),
+                                    tint = if (selected) selectedContentColor else unselectedContentColor
+                                )
+                                Spacer(modifier = Modifier.height(2.dp))
+                                Text(
+                                    text = stringResource(id = screen.title),
+                                    style = MaterialTheme.typography.labelSmall,
+                                    fontWeight = if (selected) FontWeight.Bold else FontWeight.Medium,
+                                    color = if (selected) selectedContentColor else unselectedContentColor
+                                )
+                            }
+                        }
                     }
                 }
             }
         }
     ) { innerPadding ->
         NavHost(
-            dashboardNavController, 
-            startDestination = BottomNavScreen.Home.route, 
+            dashboardNavController,
+            startDestination = BottomNavScreen.Home.route,
             modifier = Modifier.padding(innerPadding)
         ) {
-            composable(BottomNavScreen.Home.route) { 
+            composable(BottomNavScreen.Home.route) {
                 CitizenHomeScreen(
-                    viewModel = viewModel, 
+                    viewModel = viewModel,
                     onReportClick = { /* Navigate to Create Report screen */ },
-                    onViewAllReports = { dashboardNavController.navigate(BottomNavScreen.Reports.route) }
-                ) 
+                    onViewAllReports = {
+                        dashboardNavController.navigate(BottomNavScreen.Reports.route) {
+                            popUpTo(dashboardNavController.graph.findStartDestination().id) {
+                                saveState = true
+                            }
+                            launchSingleTop = true
+                            restoreState = true
+                        }
+                    }
+                )
             }
-            composable(BottomNavScreen.Reports.route) { 
-                CitizenReportsScreen(viewModel = viewModel) 
+            composable(BottomNavScreen.Reports.route) {
+                CitizenReportsScreen(viewModel = viewModel)
             }
-            composable(BottomNavScreen.Account.route) { 
-                CitizenAccountScreen(onLogout = onLogout) 
+            composable(BottomNavScreen.Account.route) {
+                CitizenAccountScreen(
+                    viewModel = accountViewModel,
+                    onEditProfile = onEditProfile,
+                    onLogout = onLogout
+                )
             }
         }
     }

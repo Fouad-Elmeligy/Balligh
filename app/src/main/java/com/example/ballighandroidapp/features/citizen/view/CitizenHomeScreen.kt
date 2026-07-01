@@ -8,7 +8,6 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.filled.PhotoCamera
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
@@ -28,8 +27,6 @@ import com.example.ballighandroidapp.features.citizen.viewmodel.CitizenMainViewM
 import com.example.ballighandroidapp.helpers.local.data.entities.ReportEntity
 import com.example.ballighandroidapp.ui.theme.Primary
 import androidx.compose.foundation.BorderStroke
-import androidx.compose.foundation.Image
-import androidx.compose.material3.Surface
 
 @Composable
 fun CitizenHomeScreen(
@@ -38,177 +35,134 @@ fun CitizenHomeScreen(
     onViewAllReports: () -> Unit
 ) {
     val state by viewModel.homeState.collectAsState()
+    
+    // Logic for Dynamic First Name display
+    val displayName = state.userName?.trim()?.split(" ")?.firstOrNull() ?: ""
 
     Column(
         modifier = Modifier
             .fillMaxSize()
             .background(Color(0xFFF8FAFC))
             .verticalScroll(rememberScrollState())
+            .padding(24.dp)
     ) {
-        // Professional Header
+        // Welcome Section - Dynamic First Name
+        Text(
+            text = if (displayName.isNotEmpty()) 
+                stringResource(id = R.string.format_welcome_user, displayName)
+            else 
+                stringResource(id = R.string.promo_welcome),
+            fontSize = 32.sp,
+            fontWeight = FontWeight.Bold,
+            color = Color(0xFF0F172A),
+            lineHeight = 40.sp
+        )
+        Text(
+            text = stringResource(id = R.string.promo_improve_city),
+            fontSize = 16.sp,
+            color = Color(0xFF64748B),
+            modifier = Modifier.padding(top = 8.dp)
+        )
+
+        Spacer(modifier = Modifier.height(32.dp))
+
+        // Primary Action Card (Reporting) - Re-aligned to Center-Focused Style
         Surface(
-            modifier = Modifier.fillMaxWidth(),
-            color = Color.White,
-            shadowElevation = 0.5.dp
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(200.dp)
+                .clickable { onReportClick() },
+            shape = RoundedCornerShape(32.dp),
+            color = Primary,
+            shadowElevation = 8.dp
         ) {
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .statusBarsPadding()
-                    .padding(horizontal = 24.dp, vertical = 16.dp),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Image(
-                        painter = painterResource(id = R.drawable.logodark),
-                        contentDescription = null,
-                        modifier = Modifier.size(36.dp)
-                    )
-                    Spacer(modifier = Modifier.width(12.dp))
-                    Text(
-                        text = stringResource(id = R.string.balligh_english),
-                        fontSize = 22.sp,
-                        fontWeight = FontWeight.ExtraBold,
-                        color = Primary,
-                        letterSpacing = (-0.5).sp
-                    )
-                }
+            Box(modifier = Modifier.fillMaxSize()) {
+                // Decorative element
                 Surface(
+                    modifier = Modifier
+                        .align(Alignment.TopEnd)
+                        .offset(x = 40.dp, y = (-40).dp)
+                        .size(150.dp),
                     shape = CircleShape,
-                    color = Primary.copy(alpha = 0.08f),
-                    modifier = Modifier.size(44.dp)
+                    color = Color.White.copy(alpha = 0.05f)
+                ) {}
+
+                Column(
+                    modifier = Modifier.fillMaxSize(),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.Center
                 ) {
-                    IconButton(onClick = { /* Notifications */ }) {
-                        Icon(
-                            imageVector = Icons.Default.Notifications,
-                            contentDescription = null,
-                            tint = Primary,
-                            modifier = Modifier.size(24.dp)
-                        )
-                    }
-                }
-            }
-        }
-
-        Column(modifier = Modifier.padding(24.dp)) {
-            // Welcome Section
-            Text(
-                text = stringResource(id = R.string.format_welcome_user, state.userName),
-                fontSize = 32.sp,
-                fontWeight = FontWeight.Bold,
-                color = Color(0xFF0F172A),
-                lineHeight = 40.sp
-            )
-            Text(
-                text = stringResource(id = R.string.promo_improve_city),
-                fontSize = 16.sp,
-                color = Color(0xFF64748B),
-                modifier = Modifier.padding(top = 8.dp)
-            )
-
-            Spacer(modifier = Modifier.height(32.dp))
-
-            // Primary Action Card (Reporting)
-            Surface(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(200.dp)
-                    .clickable { onReportClick() },
-                shape = RoundedCornerShape(32.dp),
-                color = Primary,
-                shadowElevation = 8.dp
-            ) {
-                Box(modifier = Modifier.fillMaxSize()) {
-                    // Decorative element
                     Surface(
-                        modifier = Modifier
-                            .align(Alignment.TopEnd)
-                            .offset(x = 40.dp, y = (-40).dp)
-                            .size(150.dp),
+                        modifier = Modifier.size(64.dp),
                         shape = CircleShape,
-                        color = Color.White.copy(alpha = 0.05f)
-                    ) {}
-
-                    Column(
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .padding(24.dp),
-                        horizontalAlignment = Alignment.Start,
-                        verticalArrangement = Arrangement.Bottom
+                        color = Color.White.copy(alpha = 0.2f)
                     ) {
-                        Surface(
-                            modifier = Modifier.size(56.dp),
-                            shape = CircleShape,
-                            color = Color.White.copy(alpha = 0.2f)
-                        ) {
-                            Icon(
-                                imageVector = Icons.Default.PhotoCamera,
-                                contentDescription = null,
-                                tint = Color.White,
-                                modifier = Modifier.padding(14.dp).size(28.dp)
-                            )
-                        }
-                        Spacer(modifier = Modifier.height(16.dp))
-                        Text(
-                            text = stringResource(id = R.string.report_reporting_action),
-                            color = Color.White,
-                            fontSize = 26.sp,
-                            fontWeight = FontWeight.Bold
+                        Icon(
+                            imageVector = Icons.Default.PhotoCamera,
+                            contentDescription = null,
+                            tint = Color.White,
+                            modifier = Modifier.padding(16.dp).size(32.dp)
                         )
                     }
-                }
-            }
-
-            Spacer(modifier = Modifier.height(32.dp))
-
-            // Stats Row
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(16.dp)
-            ) {
-                StatCard(
-                    count = state.totalReports.toString(),
-                    label = stringResource(id = R.string.report_plural),
-                    modifier = Modifier.weight(1f)
-                )
-                StatCard(
-                    count = state.resolvedReports.toString(),
-                    label = "Resolved", // Or R.string.status_completed
-                    modifier = Modifier.weight(1f)
-                )
-            }
-
-            Spacer(modifier = Modifier.height(40.dp))
-
-            // Latest Reports Section
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Text(
-                    text = "Latest Reports",
-                    fontSize = 20.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = Color(0xFF0F172A)
-                )
-                TextButton(onClick = onViewAllReports) {
+                    Spacer(modifier = Modifier.height(16.dp))
                     Text(
-                        text = stringResource(id = R.string.action_view_all),
-                        color = Primary,
+                        text = stringResource(id = R.string.report_reporting_action),
+                        color = Color.White,
+                        fontSize = 28.sp, // Slightly increased typography size
                         fontWeight = FontWeight.Bold
                     )
                 }
             }
+        }
 
-            Spacer(modifier = Modifier.height(16.dp))
+        Spacer(modifier = Modifier.height(32.dp))
 
-            // Column for latest reports
-            state.latestReports.forEach { report ->
-                CitizenReportCard(report = report)
-                Spacer(modifier = Modifier.height(16.dp))
+        // Stats Row
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(16.dp)
+        ) {
+            StatCard(
+                count = state.totalReports.toString(),
+                label = stringResource(id = R.string.report_plural),
+                modifier = Modifier.weight(1f)
+            )
+            StatCard(
+                count = state.resolvedReports.toString(),
+                label = "Resolved",
+                modifier = Modifier.weight(1f)
+            )
+        }
+
+        Spacer(modifier = Modifier.height(40.dp))
+
+        // Latest Reports Section
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text(
+                text = "Latest Reports",
+                fontSize = 20.sp,
+                fontWeight = FontWeight.Bold,
+                color = Color(0xFF0F172A)
+            )
+            TextButton(onClick = onViewAllReports) {
+                Text(
+                    text = stringResource(id = R.string.action_view_all),
+                    color = Primary,
+                    fontWeight = FontWeight.Bold
+                )
             }
+        }
+
+        Spacer(modifier = Modifier.height(16.dp))
+
+        // Column for latest reports
+        state.latestReports.forEach { report ->
+            CitizenReportCard(report = report)
+            Spacer(modifier = Modifier.height(16.dp))
         }
     }
 }

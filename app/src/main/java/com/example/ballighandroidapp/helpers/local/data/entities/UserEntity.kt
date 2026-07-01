@@ -13,6 +13,7 @@ data class UserEntity(
     val phone: String,
     val role: Int, // 1: Citizen, 2: Employee, 3: Admin
     val district: String,
+    val profilePhotoPath: String? = null,
     // So the employee can't delete the citizen just block it
     val accountStatus: Int = 1 // 1: Active, 2: Blocked, 3: Deactivated
 )

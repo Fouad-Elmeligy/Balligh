@@ -201,6 +201,7 @@
     <string name="settings_agree_to">I agree to</string>
     <string name="settings_and"> and </string>
     <string name="settings_support">Support</string>
+    <string name="feature_coming_soon">This feature will be added later</string>
 
     <!-- KPIs & Analytics Labels -->
     <string name="kpi_completion_rate">Completion Rate</string>
@@ -306,5 +307,12 @@
     <string name="role_citizen_desc">Report issues and violations in your area and track the resolution status transparently.</string>
     <string name="role_employee_desc">Receive reports assigned to your sector, update status, and communicate directly.</string>
     <string name="role_system_manager_desc">Full management of users, permissions, and comprehensive statistical report reviews.</string>
+    <string name="error_phone_empty">Phone can\'t be empty</string>
+    <string name="error_invalid_phone">Phone should be 10 or 11 numbers</string>
+    <string name="error_must_accept_terms">You must accept the terms and conditions to proceed</string>
+    <string name="error_national_id_exists">National ID already exists</string>
+    <string name="error_something_went_wrong">Something went wrong</string>
+    <string name="enabled">enabled</string>
+    <string name="disabled">disabled</string>
 
 </resources>

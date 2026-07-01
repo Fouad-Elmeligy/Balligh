@@ -99,7 +99,6 @@ fun RegisterScreen(
             ) {
                 Spacer(modifier = Modifier.height(32.dp))
 
-                // Logo Container
                 Surface(
                     modifier = Modifier
                         .size(90.dp)
@@ -135,30 +134,43 @@ fun RegisterScreen(
 
                 Spacer(modifier = Modifier.height(32.dp))
 
-                // Full Name
+                viewModel.generalErrorResId?.let { errorId ->
+                    Text(
+                        text = stringResource(id = errorId),
+                        color = MaterialTheme.colorScheme.error,
+                        fontSize = 14.sp,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(bottom = 16.dp),
+                        textAlign = androidx.compose.ui.text.style.TextAlign.Center
+                    )
+                }
+
                 BallighTextField(
                     value = viewModel.fullName,
                     onValueChange = { viewModel.onFullNameChange(it) },
                     label = stringResource(id = R.string.user_full_name),
                     placeholder = stringResource(id = R.string.user_enter_full_name),
-                    leadingIcon = Icons.Default.Person
+                    leadingIcon = Icons.Default.Person,
+                    isError = viewModel.fullNameErrorResId != null,
+                    errorMessage = viewModel.fullNameErrorResId?.let { stringResource(id = it) }
                 )
 
                 Spacer(modifier = Modifier.height(20.dp))
 
-                // Mobile Number
                 BallighTextField(
                     value = viewModel.phone,
                     onValueChange = { viewModel.onPhoneChange(it) },
                     label = stringResource(id = R.string.user_phone),
                     placeholder = "05xxxxxxxx",
                     leadingIcon = Icons.Default.Phone,
-                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone)
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone),
+                    isError = viewModel.phoneErrorResId != null,
+                    errorMessage = viewModel.phoneErrorResId?.let { stringResource(id = it) }
                 )
 
                 Spacer(modifier = Modifier.height(20.dp))
 
-                // National ID
                 BallighTextField(
                     value = viewModel.nationalId,
                     onValueChange = { viewModel.onNationalIdChange(it) },
@@ -172,7 +184,6 @@ fun RegisterScreen(
 
                 Spacer(modifier = Modifier.height(20.dp))
 
-                // Password
                 BallighTextField(
                     value = viewModel.password,
                     onValueChange = { viewModel.onPasswordChange(it) },
@@ -186,7 +197,6 @@ fun RegisterScreen(
 
                 Spacer(modifier = Modifier.height(16.dp))
 
-                // Terms and Conditions Checkbox
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     verticalAlignment = Alignment.CenterVertically
@@ -196,14 +206,14 @@ fun RegisterScreen(
                         onCheckedChange = { viewModel.onAgreedToTermsChange(it) },
                         colors = CheckboxDefaults.colors(checkedColor = Primary)
                     )
-                    
+
                     val termsText = buildAnnotatedString {
                         append(stringResource(id = R.string.settings_agree_to) + " ")
                         withStyle(style = SpanStyle(color = Primary, fontWeight = FontWeight.Bold)) {
                             append(stringResource(id = R.string.settings_privacy_and_terms))
                         }
                     }
-                    
+
                     Text(
                         text = termsText,
                         fontSize = 14.sp,
@@ -214,7 +224,6 @@ fun RegisterScreen(
 
                 Spacer(modifier = Modifier.height(32.dp))
 
-                // Register Button - Always enabled as requested
                 BallighButton(
                     text = stringResource(id = R.string.auth_create_account_short),
                     onClick = { viewModel.register(onRegisterSuccess) },
@@ -223,7 +232,6 @@ fun RegisterScreen(
 
                 Spacer(modifier = Modifier.height(40.dp))
 
-                // Already have an account? Login
                 val loginPrompt = buildAnnotatedString {
                     append(stringResource(id = R.string.auth_have_account) + " ")
                     withStyle(style = SpanStyle(color = Primary, fontWeight = FontWeight.Bold)) {

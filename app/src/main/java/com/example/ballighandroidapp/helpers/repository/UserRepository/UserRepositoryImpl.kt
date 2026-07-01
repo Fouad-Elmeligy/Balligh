@@ -11,6 +11,7 @@ class UserRepositoryImpl @Inject constructor(
     override suspend fun insertUser(user: UserEntity) = userDao.insertUser(user)
     override suspend fun updateUser(user: UserEntity) = userDao.updateUser(user)
     override suspend fun getUserById(id: Int): UserEntity? = userDao.getUserById(id)
+    override fun getUserByNationalID(nationalID: String): Flow<UserEntity?> = userDao.getUserByNationalID(nationalID)
     override fun getAllUsers(): Flow<List<UserEntity>> = userDao.getAllUsers()
     override fun getUsersByRole(roleId: Int): Flow<List<UserEntity>> = userDao.getUsersByRole(roleId)
     override fun getUsersByDistrict(districtName: String): Flow<List<UserEntity>> = userDao.getUsersByDistrict(districtName)

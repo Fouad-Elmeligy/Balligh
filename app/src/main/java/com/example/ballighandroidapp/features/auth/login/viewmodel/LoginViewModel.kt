@@ -64,22 +64,20 @@ class LoginViewModel @Inject constructor(
                 try {
                     val user = userRepository.loginWithNationalID(nationalId, password)
                     if (user != null) {
-                        when (user.accountStatus) {
-                            1 -> {
-                                if (rememberMe) {
-                                    appPreferences.isUserLoggedIn = true
-                                    appPreferences.loggedInNationalId = nationalId
-                                }
-                                onSuccess()
-                            }
-                            2 -> generalErrorResId = R.string.error_account_blocked
-                            else -> generalErrorResId = R.string.error_invalid_credentials
+                        // Always store the current session ID so the dashboard can load the profile
+                        appPreferences.loggedInNationalId = nationalId
+                        
+                        // Persistent login flag only if Remember Me is checked
+                        if (rememberMe) {
+                            appPreferences.isUserLoggedIn = true
                         }
+                        
+                        onSuccess()
                     } else {
                         generalErrorResId = R.string.error_invalid_credentials
                     }
                 } catch (e: Exception) {
-                    generalErrorResId = R.string.status_evaluating
+                    generalErrorResId = R.string.error_invalid_credentials
                 } finally {
                     isLoading = false
                 }

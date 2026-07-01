@@ -1,5 +1,6 @@
 package com.example.ballighandroidapp.features.citizen.view
 
+import android.widget.Toast
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -15,27 +16,37 @@ import androidx.compose.material.icons.filled.HelpOutline
 import androidx.compose.material.icons.filled.Language
 import androidx.compose.material.icons.filled.Logout
 import androidx.compose.material.icons.filled.NotificationsNone
+import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.PrivacyTip
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import coil.compose.rememberAsyncImagePainter
 import com.example.ballighandroidapp.R
+import com.example.ballighandroidapp.features.citizen.viewmodel.CitizenAccountViewModel
 import com.example.ballighandroidapp.ui.theme.Error
 import com.example.ballighandroidapp.ui.theme.Primary
 
 @Composable
 fun CitizenAccountScreen(
+    viewModel: CitizenAccountViewModel,
+    onEditProfile: () -> Unit,
     onLogout: () -> Unit
 ) {
+    val user by viewModel.user.collectAsState()
+    val context = LocalContext.current
+    val comingSoonMessage = stringResource(id = R.string.feature_coming_soon)
+
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -51,20 +62,31 @@ fun CitizenAccountScreen(
             Surface(
                 modifier = Modifier.size(120.dp),
                 shape = CircleShape,
-                border = BorderStroke(2.dp, Primary)
+                border = BorderStroke(2.dp, Primary),
+                color = Color.White
             ) {
-                Image(
-                    painter = painterResource(id = R.drawable.splashscreen1photo), // Placeholder for profile pic
-                    contentDescription = null,
-                    contentScale = ContentScale.Crop
-                )
+                if (user?.profilePhotoPath != null) {
+                    Image(
+                        painter = rememberAsyncImagePainter(user?.profilePhotoPath),
+                        contentDescription = null,
+                        contentScale = ContentScale.Crop,
+                        modifier = Modifier.fillMaxSize()
+                    )
+                } else {
+                    Icon(
+                        imageVector = Icons.Default.Person,
+                        contentDescription = null,
+                        modifier = Modifier.padding(24.dp),
+                        tint = Primary.copy(alpha = 0.5f)
+                    )
+                }
             }
         }
 
         Spacer(modifier = Modifier.height(16.dp))
 
         Text(
-            text = "Ahmed Mohammed", // Mock name
+            text = user?.fullName ?: "",
             fontSize = 24.sp,
             fontWeight = FontWeight.Bold,
             color = Color(0xFF0F172A)
@@ -73,7 +95,7 @@ fun CitizenAccountScreen(
         Spacer(modifier = Modifier.height(12.dp))
 
         Button(
-            onClick = { /* Edit Profile */ },
+            onClick = onEditProfile,
             colors = ButtonDefaults.buttonColors(containerColor = Primary),
             shape = RoundedCornerShape(12.dp),
             modifier = Modifier.height(44.dp)
@@ -94,7 +116,16 @@ fun CitizenAccountScreen(
                 SettingsRow(
                     icon = Icons.Default.NotificationsNone,
                     title = stringResource(id = R.string.settings_notifications),
-                    onClick = {}
+                    showToggle = true,
+                    isToggled = viewModel.isNotificationsEnabled,
+                    onToggleChange = { 
+                        val resId = viewModel.toggleNotifications()
+                        Toast.makeText(context, context.getString(resId), Toast.LENGTH_SHORT).show()
+                    },
+                    onClick = { 
+                        val resId = viewModel.toggleNotifications()
+                        Toast.makeText(context, context.getString(resId), Toast.LENGTH_SHORT).show()
+                    }
                 )
                 
                 HorizontalDivider(modifier = Modifier.padding(horizontal = 24.dp), thickness = 0.5.dp, color = Color(0xFFF1F5F9))
@@ -103,6 +134,8 @@ fun CitizenAccountScreen(
                     icon = Icons.Default.Language,
                     title = stringResource(id = R.string.settings_app_language),
                     showLanguageToggle = true,
+                    currentLanguageCode = viewModel.currentLanguageCode,
+                    onLanguageChange = { viewModel.changeLanguage(it) },
                     onClick = {}
                 )
 
@@ -111,7 +144,9 @@ fun CitizenAccountScreen(
                 SettingsRow(
                     icon = Icons.Default.HelpOutline,
                     title = stringResource(id = R.string.settings_help_support),
-                    onClick = {}
+                    onClick = {
+                        Toast.makeText(context, comingSoonMessage, Toast.LENGTH_SHORT).show()
+                    }
                 )
 
                 HorizontalDivider(modifier = Modifier.padding(horizontal = 24.dp), thickness = 0.5.dp, color = Color(0xFFF1F5F9))
@@ -119,7 +154,9 @@ fun CitizenAccountScreen(
                 SettingsRow(
                     icon = Icons.Default.PrivacyTip,
                     title = stringResource(id = R.string.settings_privacy_policy),
-                    onClick = {}
+                    onClick = {
+                        Toast.makeText(context, comingSoonMessage, Toast.LENGTH_SHORT).show()
+                    }
                 )
             }
         }
@@ -151,7 +188,12 @@ fun CitizenAccountScreen(
 fun SettingsRow(
     icon: ImageVector,
     title: String,
+    showToggle: Boolean = false,
+    isToggled: Boolean = false,
+    onToggleChange: (Boolean) -> Unit = {},
     showLanguageToggle: Boolean = false,
+    currentLanguageCode: String = "en",
+    onLanguageChange: (String) -> Unit = {},
     onClick: () -> Unit
 ) {
     Row(
@@ -179,12 +221,23 @@ fun SettingsRow(
         Text(
             text = title,
             modifier = Modifier.weight(1f),
-            fontSize = 16.sp,
+            fontSize = 15.sp,
             fontWeight = FontWeight.Medium,
             color = Color(0xFF0F172A)
         )
 
-        if (showLanguageToggle) {
+        if (showToggle) {
+            Switch(
+                checked = isToggled,
+                onCheckedChange = onToggleChange,
+                colors = SwitchDefaults.colors(
+                    checkedThumbColor = Color.White,
+                    checkedTrackColor = Primary,
+                    uncheckedThumbColor = Color.White,
+                    uncheckedTrackColor = Color.LightGray
+                )
+            )
+        } else if (showLanguageToggle) {
             Surface(
                 modifier = Modifier.height(32.dp),
                 shape = RoundedCornerShape(16.dp),
@@ -197,20 +250,23 @@ fun SettingsRow(
                     Text(
                         text = "العربية",
                         fontSize = 12.sp,
-                        modifier = Modifier.padding(horizontal = 8.dp),
-                        color = Color.Gray
+                        modifier = Modifier
+                            .clip(RoundedCornerShape(14.dp))
+                            .background(if (currentLanguageCode == "ar") Primary else Color.Transparent)
+                            .clickable { onLanguageChange("ar") }
+                            .padding(horizontal = 12.dp, vertical = 4.dp),
+                        color = if (currentLanguageCode == "ar") Color.White else Color.Gray
                     )
-                    Surface(
-                        shape = RoundedCornerShape(14.dp),
-                        color = Primary
-                    ) {
-                        Text(
-                            text = "English",
-                            fontSize = 12.sp,
-                            modifier = Modifier.padding(horizontal = 12.dp, vertical = 4.dp),
-                            color = Color.White
-                        )
-                    }
+                    Text(
+                        text = "English",
+                        fontSize = 12.sp,
+                        modifier = Modifier
+                            .clip(RoundedCornerShape(14.dp))
+                            .background(if (currentLanguageCode == "en") Primary else Color.Transparent)
+                            .clickable { onLanguageChange("en") }
+                            .padding(horizontal = 12.dp, vertical = 4.dp),
+                        color = if (currentLanguageCode == "en") Color.White else Color.Gray
+                    )
                 }
             }
         } else {
