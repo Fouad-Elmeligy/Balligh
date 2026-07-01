@@ -29,10 +29,15 @@ class AppPreferences @Inject constructor(
         get() = prefs.getBoolean(KEY_NOTIFICATIONS_ENABLED, true)
         set(value) = prefs.edit().putBoolean(KEY_NOTIFICATIONS_ENABLED, value).apply()
 
+    var currentUserRole: Int
+        get() = prefs.getInt(KEY_CURRENT_USER_ROLE, 1)
+        set(value) = prefs.edit().putInt(KEY_CURRENT_USER_ROLE, value).apply()
+
     fun logout() {
         prefs.edit()
             .putBoolean(KEY_IS_USER_LOGGED_IN, false)
             .putString(KEY_LOGGED_IN_NATIONAL_ID, null)
+            .putInt(KEY_CURRENT_USER_ROLE, 1)
             .apply()
     }
 
@@ -41,5 +46,6 @@ class AppPreferences @Inject constructor(
         private const val KEY_IS_USER_LOGGED_IN = "is_user_logged_in"
         private const val KEY_LOGGED_IN_NATIONAL_ID = "logged_in_national_id"
         private const val KEY_NOTIFICATIONS_ENABLED = "is_notifications_enabled"
+        private const val KEY_CURRENT_USER_ROLE = "current_user_role"
     }
 }

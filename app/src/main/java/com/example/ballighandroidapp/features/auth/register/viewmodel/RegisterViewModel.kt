@@ -88,7 +88,6 @@ class RegisterViewModel @Inject constructor(
             viewModelScope.launch {
                 isLoading = true
                 try {
-                    // Check if National ID already exists
                     if (userRepository.isNationalIDRepeated(nationalId)) {
                         nationalIdErrorResId = R.string.error_national_id_exists
                         isLoading = false
@@ -100,16 +99,16 @@ class RegisterViewModel @Inject constructor(
                         nationalID = nationalId,
                         password = password,
                         phone = phone,
-                        role = 1, // Default role: Citizen
-                        district = "", // Default empty
-                        accountStatus = 1 // Active
+                        role = 1, // Citizen
+                        district = "",
+                        accountStatus = 1
                     )
                     userRepository.insertUser(newUser)
-                    
-                    // Fix: Explicitly save session data after successful registration
+
                     appPreferences.loggedInNationalId = nationalId
+                    appPreferences.currentUserRole = 1
                     appPreferences.isUserLoggedIn = true
-                    
+
                     onSuccess()
                 } catch (e: Exception) {
                     generalErrorResId = R.string.error_something_went_wrong
@@ -139,7 +138,10 @@ class RegisterViewModel @Inject constructor(
             isValid = false
         }
 
-        if (nationalId.length != 14) {
+        if (nationalId == "99999999999999" || nationalId == "88888888888888") {
+            nationalIdErrorResId = R.string.error_national_id_exists
+            isValid = false
+        } else if (nationalId.length != 14) {
             nationalIdErrorResId = R.string.error_invalid_national_id
             isValid = false
         }

@@ -118,7 +118,6 @@ fun AppRoot() {
         composable(Screen.Login.route) {
             LoginScreen(
                 onLoginSuccess = {
-                    appPreferences.isUserLoggedIn = true
                     navController.navigate(Screen.Dashboard.route) {
                         popUpTo(Screen.Login.route) { inclusive = true }
                     }
@@ -133,7 +132,6 @@ fun AppRoot() {
         composable(Screen.Register.route) {
             RegisterScreen(
                 onRegisterSuccess = {
-                    appPreferences.isUserLoggedIn = true
                     navController.navigate(Screen.Dashboard.route) {
                         popUpTo(Screen.Register.route) { inclusive = true }
                     }
@@ -150,26 +148,38 @@ fun AppRoot() {
         }
 
         composable(Screen.Dashboard.route) {
-            val accountViewModel: CitizenAccountViewModel = hiltViewModel()
+            val userRole = appPreferences.currentUserRole
 
-            LaunchedEffect(Unit) {
-                accountViewModel.prepareEdit()
+            val handleLogout = {
+                appPreferences.logout()
+                navController.navigate(Screen.Login.route) {
+                    popUpTo(Screen.Dashboard.route) { inclusive = true }
+                }
             }
 
-            CitizenDashboard(
-                accountViewModel = accountViewModel,
-                onEditProfile = { navController.navigate(Screen.EditProfile.route) },
-                onAddReport = { reportId ->
-                    navController.navigate(Screen.AddReport.createRoute(reportId))
-                },
-                onNotificationsClick = { navController.navigate(Screen.Notifications.route) },
-                onLogout = {
-                    appPreferences.logout()
-                    navController.navigate(Screen.Login.route) {
-                        popUpTo(Screen.Dashboard.route) { inclusive = true }
-                    }
+            when (userRole) {
+                3 -> {
+                    AdminDashboardScreen(onLogout = handleLogout)
                 }
-            )
+                2 -> {
+                    EmployeeDashboardScreen(onLogout = handleLogout)
+                }
+                else -> {
+                    val accountViewModel: CitizenAccountViewModel = hiltViewModel()
+                    LaunchedEffect(Unit) {
+                        accountViewModel.prepareEdit()
+                    }
+                    CitizenDashboard(
+                        accountViewModel = accountViewModel,
+                        onEditProfile = { navController.navigate(Screen.EditProfile.route) },
+                        onAddReport = { reportId ->
+                            navController.navigate(Screen.AddReport.createRoute(reportId))
+                        },
+                        onNotificationsClick = { navController.navigate(Screen.Notifications.route) },
+                        onLogout = handleLogout
+                    )
+                }
+            }
         }
 
         composable(Screen.EditProfile.route) {
@@ -203,6 +213,38 @@ fun AppRoot() {
                 viewModel = notificationViewModel,
                 onBack = { navController.popBackStack() }
             )
+        }
+    }
+}
+
+@Composable
+fun AdminDashboardScreen(onLogout: () -> Unit) {
+    Box(
+        modifier = Modifier.fillMaxSize().background(Color(0xFFF4F6FA)),
+        contentAlignment = Alignment.Center
+    ) {
+        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+            Text("مرحباً بك في لوحة تحكم الأدمن 🛡️", fontSize = 22.sp, fontWeight = FontWeight.Bold, color = Primary)
+            Spacer(modifier = Modifier.height(16.dp))
+            Button(onClick = onLogout, colors = ButtonDefaults.buttonColors(containerColor = Color.Red)) {
+                Text("تسجيل الخروج", color = Color.White)
+            }
+        }
+    }
+}
+
+@Composable
+fun EmployeeDashboardScreen(onLogout: () -> Unit) {
+    Box(
+        modifier = Modifier.fillMaxSize().background(Color(0xFFF4F6FA)),
+        contentAlignment = Alignment.Center
+    ) {
+        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+            Text("مرحباً بك في لوحة تحكم الموظف 💼", fontSize = 22.sp, fontWeight = FontWeight.Bold, color = Primary)
+            Spacer(modifier = Modifier.height(16.dp))
+            Button(onClick = onLogout, colors = ButtonDefaults.buttonColors(containerColor = Color.Red)) {
+                Text("تسجيل الخروج", color = Color.White)
+            }
         }
     }
 }
